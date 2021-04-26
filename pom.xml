@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.codesseur</groupId>
   <artifactId>better-stream</artifactId>
-  <version>0.0.0-SNAPSHOT</version>
+  <version>0.0.0</version>
   <name>better-stream</name>
   <description>A better way to use Java Stream API. </description>
   <url>https://github.com/codesseur/better-stream</url>
@@ -39,7 +37,7 @@
     <connection>scm:git:git://github.com/codesseur/better-stream.git</connection>
     <developerConnection>scm:git:git@github.com:codesseur/better-stream.git</developerConnection>
     <url>https://github.com/codesseur/better-stream</url>
-    <tag>HEAD</tag>
+    <tag>better-stream-0.0.0</tag>
   </scm>
 
   <distributionManagement>
