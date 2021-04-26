@@ -4,7 +4,7 @@
 
   <groupId>com.codesseur</groupId>
   <artifactId>better-stream</artifactId>
-  <version>0.0.0</version>
+  <version>0.0.1-SNAPSHOT</version>
   <name>better-stream</name>
   <description>A better way to use Java Stream API. </description>
   <url>https://github.com/codesseur/better-stream</url>
@@ -37,7 +37,7 @@
     <connection>scm:git:git://github.com/codesseur/better-stream.git</connection>
     <developerConnection>scm:git:git@github.com:codesseur/better-stream.git</developerConnection>
     <url>https://github.com/codesseur/better-stream</url>
-    <tag>better-stream-0.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
