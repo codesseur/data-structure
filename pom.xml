@@ -91,7 +91,7 @@
         <version>2.22.0</version>
         <configuration>
           <argLine>
-            --illegal-access=permit
+            @{argLine} --illegal-access=permit
           </argLine>
         </configuration>
       </plugin>
@@ -101,7 +101,7 @@
         <version>2.22.0</version>
         <configuration>
           <argLine>
-            --illegal-access=permit
+            @{argLine} --illegal-access=permit
           </argLine>
         </configuration>
       </plugin>
