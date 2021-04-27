@@ -1,5 +1,15 @@
 language: java
+script:
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=codesseur_better-stream
+
 after_success:
   - mvn clean test jacoco:report coveralls:report
+
+addons:
+  sonarcloud:
+    organization: "codesseur"
+    token:
+      secure: "jU6GGOGPt4DEXnk8alCk91IShZNec2KytxNoWA9GAAimYDwx6+cMsJlAhlfqU0sNjN5RAFE5u5aADSi1V/y4ydZ+OOUTcSfz/0o1t9H6J2eERpSLcnGL4PHgjHA31i3HQHtoMyHPpZqXy1lszwusswWJRsYXJufpPH2eDpAh8RsO+rWZ7dkdZmzjgv5jcKZ4Dvnx8AoSXaZ+N1j7KwU2uo5jjq8fhIspUFLQ1zcWVadSD16bk1Ia8a9eBUiG+UJVmyIJpsufk5h5juEtnaiMNqm9IEmXCr1vrZnI0ZDROF0tlen/O5soFjsIfPc013fPo22DZYXTu4NTLIbJxoFwIsJ/asSuLllSIBqXskXsotmBWCQ1zWQWVn3mcoINsSakGqN91vxDHePQea+dEBA4/MfDCy6T3juw+Vm+dnVS48rXdVI3btFsYkudxRdVC93kTTB8Kb6eLskn7lyxWDrkAGnldBVRXY5rBrCnnhgwkXWEbGqzFSgGQFI8YBvvPFQYyRiIHczlAMpJDVVGsws3VmtHDy5v47zS5Hnc4B2rvFAftbcP+WAv9LyOOQhzQ8QJ7gUvGUAy8w400W0s9+1+D7G03bSSfDZIBHtJlyAIQ4BlzDzoyjXwr67WeSdOGxNEp/oQdXJX4Ijq7YcbpRWKVkAsT/hk4t1mIgDsDQJ32W4="
+
 jdk:
   - oraclejdk11
