@@ -1,6 +1,5 @@
 language: java
-install: skip
-script:
-  - mvn clean install coveralls:report -Dgpg.skip=true -B -V
+after_success:
+  - mvn clean test jacoco:report coveralls:report
 jdk:
   - oraclejdk11
