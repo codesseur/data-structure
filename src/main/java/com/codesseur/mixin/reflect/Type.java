@@ -39,8 +39,7 @@ public abstract class Type<T> implements SafeCaster {
   }
 
   public static <T> Type<T> of(Class<T> type) {
-    return new Type<>(type) {
-    };
+    return of((java.lang.reflect.Type) type);
   }
 
   public static <T> Type<T> of(java.lang.reflect.Type type) {

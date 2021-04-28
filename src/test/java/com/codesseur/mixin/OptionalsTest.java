@@ -1,5 +1,7 @@
 package com.codesseur.mixin;
 
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -62,6 +64,20 @@ public class OptionalsTest {
     Optional<String> value = Optionals.or(Stream.of(Optional::empty, () -> Optional.of("v1"), () -> Optional.of("v2")));
 
     Assertions.assertThat(value).hasValue("v1");
+  }
+
+  @Test
+  public void andStreamWithBothPresent() {
+    Tuple2<String, String> value = Optionals.mandatoryAnd(Optional.of("v1"), Optional.of("v2"));
+
+    Assertions.assertThat(value._1()).isEqualTo("v1");
+    Assertions.assertThat(value._2()).isEqualTo("v2");
+  }
+
+  @Test
+  public void andStreamWithFirstEmpty() {
+    Assertions.assertThatThrownBy(() -> Optionals.mandatoryAnd(Optional.empty(), Optional.of("v1")))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

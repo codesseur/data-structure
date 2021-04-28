@@ -1,6 +1,6 @@
 package com.codesseur.mixin;
 
-import static com.codesseur.mixin.functions.Functions.functionize;
+import static com.codesseur.mixin.functions.Functions.func;
 
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
@@ -90,7 +90,7 @@ public interface Optionals {
     }
 
     public <R> R combine(BiFunction<? super T, ? super E, ? extends R> both, Supplier<? extends R> leftOrRight) {
-      return combine(functionize(leftOrRight), both, functionize(leftOrRight));
+      return combine(func(leftOrRight), both, func(leftOrRight));
     }
 
     public <R> Optional<R> combine(BiFunction<? super T, ? super E, ? extends R> both) {

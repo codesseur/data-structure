@@ -13,7 +13,7 @@ public class CollectTest {
   public void toSimpleSequence() {
     Persons persons = new Persons("maria", "bob", "john");
 
-    Sequence<String> collect = persons.stream().collect(Collect.toSequence());
+    Sequence<String> collect = persons.toSequence();
 
     Assertions.assertThat(collect.value()).isEqualTo(persons.value());
   }
@@ -22,7 +22,7 @@ public class CollectTest {
   public void toSequenceWithFactory() {
     Persons persons = new Persons("maria", "bob", "john");
 
-    Persons collect = persons.stream().collect(Collect.toSequence(Persons::new));
+    Persons collect = persons.toSequence(Persons::new);
 
     Assertions.assertThat((Object) collect).isEqualTo(persons);
   }
@@ -31,7 +31,7 @@ public class CollectTest {
   public void toSimpleBag() {
     Products products = new Products("pen", "book");
 
-    Bag<String> collect = products.stream().collect(Collect.toBag());
+    Bag<String> collect = products.toBag();
 
     Assertions.assertThat(collect.value()).isEqualTo(products.value());
   }
@@ -40,7 +40,7 @@ public class CollectTest {
   public void toBagWithFactory() {
     Products products = new Products("pen", "book");
 
-    Products collect = products.stream().collect(Collect.toBag(Products::new));
+    Products collect = products.toBag(Products::new);
 
     Assertions.assertThat((Object) collect).isEqualTo(products);
   }

@@ -4,6 +4,7 @@ import com.codesseur.mixin.iterate.container.Dictionary;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,26 @@ public class DictionaryTest {
     map.put("key", "value");
     return map;
   };
+
+  @Test
+  public void empty() {
+    Assertions.assertThat(Dictionary.empty().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void size() {
+    Assertions.assertThat(dictionary.size()).isEqualTo(1);
+  }
+
+  @Test
+  public void hasKey() {
+    Assertions.assertThat(dictionary.hasKey("key")).isTrue();
+  }
+
+  @Test
+  public void keys() {
+    Assertions.assertThat(dictionary.keys().value()).containsOnly("key");
+  }
 
   @Test
   public void mapValue() {
@@ -29,6 +50,11 @@ public class DictionaryTest {
   @Test
   public void mapBi() {
     Assertions.assertThat((Iterable<String>) dictionary.map((k, v) -> k + k)).containsOnly("keykey");
+  }
+
+  @Test
+  public void mapPartial() {
+    Assertions.assertThat((Iterable<Object>) dictionary.mapPartial((k, v) -> Optional.empty())).isEmpty();
   }
 
   @Test
