@@ -1,6 +1,7 @@
 package com.codesseur.mixin.iterate.container;
 
 import com.codesseur.mixin.iterate.Streamed;
+import com.codesseur.mixin.reflect.Type.$;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.List;
@@ -20,13 +21,14 @@ public interface MultiValuedDictionary<K, V> extends Dictionary<K, Sequence<V>> 
   }
 
   @SafeVarargs
-  static <K, V> MultiValuedDictionary<K, V> of(Tuple2<K, V>... values) {
+  static <K, V> MultiValuedDictionary<K, V> of(Tuple2<? extends K, ? extends V>... values) {
     return of(Stream.of(values));
   }
 
-  static <K, V> MultiValuedDictionary<K, V> of(Stream<Tuple2<K, V>> values) {
-    final Map<K, Sequence<V>> map = values.map(p -> p.map2(Sequence::of))
-        .collect(Collectors.toMap(Tuple2::_1, Tuple2::_2, (l1, l2) -> l2));
+  static <K, V> MultiValuedDictionary<K, V> of(Stream<? extends Tuple2<? extends K, ? extends V>> values) {
+    final Map<K, Sequence<V>> map = values.map($.<Tuple2<K, V>>$()::cast)
+        .map(p -> p.map2(Sequence::of))
+        .collect(Collectors.toMap(Tuple2::_1, Tuple2::_2, (l1, l2) -> l1.append(l2).toSequence()));
     return new SimpleMultiValuedDictionary<>(map);
   }
 

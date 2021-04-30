@@ -83,7 +83,7 @@ public class Collect {
         factory::apply);
   }
 
-  public static <K, V> Collector<Tuple2<K, V>, Map<K, V>, Map<K, V>> toMapFromTuples() {
+  public static <K, V> Collector<Tuple2<? extends K, ? extends V>, Map<K, V>, Map<K, V>> toMapFromTuples() {
     return toMap(Tuple2::_1, Tuple2::_2);
   }
 

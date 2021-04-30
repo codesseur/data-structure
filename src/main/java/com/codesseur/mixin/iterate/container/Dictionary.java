@@ -22,7 +22,7 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   }
 
   @SafeVarargs
-  static <K, V> Dictionary<K, V> of(Tuple2<K, V>... value) {
+  static <K, V> Dictionary<K, V> of(Tuple2<? extends K, ? extends V>... value) {
     return of(Stream.of(value));
   }
 
@@ -30,8 +30,8 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
     return () -> (Map<K, V>) value;
   }
 
-  static <K, V> Dictionary<K, V> of(Stream<Tuple2<K, V>> value) {
-    final Map<K, V> map = value.collect(Collect.toMapFromTuples());
+  static <K, V> Dictionary<K, V> of(Stream<? extends Tuple2<? extends K, ? extends V>> value) {
+    Map<K, V> map = value.collect(Collect.toMapFromTuples());
     return () -> map;
   }
 

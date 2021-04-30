@@ -1,20 +1,19 @@
 package com.codesseur.mixin.iterate.container;
 
-import static java.util.function.Function.identity;
-
 import com.codesseur.mixin.Optionals;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import com.codesseur.mixin.Void;
 import com.codesseur.mixin.iterate.Streamed;
+import java.util.stream.StreamSupport;
 
 public interface Sequence<T> extends CollectionContainer<T, List<T>> {
 
@@ -23,66 +22,48 @@ public interface Sequence<T> extends CollectionContainer<T, List<T>> {
   }
 
   @SafeVarargs
-  static <T> Sequence<T> of(Sequence<T>... value) {
-    return of(Stream.of(value).flatMap(Container::stream));
+  static <T> Sequence<T> noEmptyOf(Optional<T>... values) {
+    return of(Stream.of(values).flatMap(Optionals::stream));
   }
 
   @SafeVarargs
-  static <T> Sequence<T> of(T... value) {
-    return of(Stream.of(value));
+  static <T> Sequence<T> nonNullOf(T... values) {
+    return of(Stream.of(values).filter(Objects::nonNull));
   }
 
   @SafeVarargs
-  static <T> Sequence<T> of(Optional<T>... value) {
-    return of(Stream.of(value).flatMap(Optionals::stream));
+  static <T> Sequence<T> of(Sequence<T>... values) {
+    return of(Stream.of(values).flatMap(Container::stream));
   }
 
   @SafeVarargs
-  static <T> Sequence<Optional<T>> ofNullables(T... value) {
-    return of(Stream.of(value).map(Optional::ofNullable));
+  static <T> Sequence<T> of(T... values) {
+    return of(Stream.of(values));
   }
 
-  static <T> Sequence<T> repeat(IntFunction<T> factory, int times) {
-    return of(IntStream.range(0, times).mapToObj(factory));
+  static <T> Sequence<T> of(Iterable<? extends T> values) {
+    return new SimpleSequence<>(StreamSupport.stream(values.spliterator(), false).collect(Collectors.toList()));
   }
 
-  static Sequence<Void> repeat(int times) {
-    return repeat(i -> Void.INSTANCE, times);
-  }
-
-  static <T> Sequence<T> of(List<? extends T> value) {
-    return new SimpleSequence<T>((List<T>) value);
-  }
-
-  static <T> Sequence<Optional<T>> ofNullables(List<T> value) {
-    return ofNullables(value.stream());
-  }
-
-  static <T> Sequence<T> of(Iterator<T> value) {
-    return of(Streamed.from(value));
-  }
-
-  static <T> Sequence<Optional<T>> ofNullables(Iterator<T> value) {
-    return ofNullables(Streamed.from(value));
+  static <T> Sequence<T> of(Iterator<T> values) {
+    return Streamed.from(values).toSequence();
   }
 
   @SafeVarargs
-  static <T> Sequence<Optional<T>> ofNullables(Stream<T>... value) {
-    return of(Optional::ofNullable, value);
-  }
-
-  @SafeVarargs
-  static <T> Sequence<T> of(Stream<? extends T>... value) {
-    return of(identity(), value);
-  }
-
-  @SafeVarargs
-  static <T, E> Sequence<E> of(Function<T, E> mapper, Stream<? extends T>... value) {
-    return Streamed.from(value).map(mapper).toSequence();
+  static <T> Sequence<T> of(Stream<? extends T>... values) {
+    return Streamed.from(values).toSequence();
   }
 
   default Optional<T> get(int index) {
     return Optional.ofNullable(value()).filter(v -> v.size() > index).map(v -> v.get(index));
+  }
+
+  static Sequence<Void> repeat(int times) {
+    return repeat(i -> null, times);
+  }
+
+  static <T> Sequence<T> repeat(IntFunction<T> factory, int times) {
+    return of(IntStream.range(0, times).mapToObj(factory));
   }
 
   default Sequence<T> trim(Predicate<T> empty) {
