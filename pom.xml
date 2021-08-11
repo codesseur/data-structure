@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.codesseur</groupId>
-  <artifactId>better-stream</artifactId>
+  <artifactId>data-structure</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>better-stream</name>
-  <description>A better way to use Java Stream API. </description>
-  <url>https://github.com/codesseur/better-stream</url>
+  <name>data-structure</name>
+  <description>A useful data structures</description>
+  <url>https://github.com/codesseur/data-structure</url>
 
   <properties>
     <java.version>11</java.version>
@@ -16,6 +18,10 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <sonar.projectKey>codesseur_data-structure</sonar.projectKey>
+    <sonar.organization>codesseur</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
 
   <licenses>
@@ -34,9 +40,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/codesseur/better-stream.git</connection>
-    <developerConnection>scm:git:git@github.com:codesseur/better-stream.git</developerConnection>
-    <url>https://github.com/codesseur/better-stream</url>
+    <connection>scm:git:git://github.com/codesseur/data-structure.git</connection>
+    <developerConnection>scm:git:git@github.com:codesseur/data-structure.git</developerConnection>
+    <url>https://github.com/codesseur/data-structure</url>
     <tag>HEAD</tag>
   </scm>
 
