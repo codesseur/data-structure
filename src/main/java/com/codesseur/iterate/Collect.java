@@ -1,7 +1,6 @@
 package com.codesseur.iterate;
 
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toSet;
 
 import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Sequence;
@@ -23,27 +22,45 @@ import java.util.stream.Collector;
 
 public class Collect {
 
-  public static <T1, T2, R1, R2> Collector<Either<T1, T2>, ?, Tuple2<R1,R2>> partitionSets(Function<Set<T1>, R1> left, Function<Set<T2>, R2> right) {
-    return partition(toSet(), toSet(), (t1, t2) -> Tuple.of(t1, t2).map(left, right));
+  public static <T1, T2, A1, A2, R1, R2> Collector<Either<T1, T2>, ?, Tuple2<R1, R2>> partition(
+      Collector<? super T1, A1, R1> first,
+      Collector<? super T2, A2, R2> second
+  ) {
+    return partition(identity(), first, second, Tuple::of);
   }
 
-  public static <T1, T2, R> Collector<Either<T1, T2>, ?, R> partitionSets(BiFunction<Set<T1>, Set<T2>, R> joiner) {
-    return partition(toSet(), toSet(), joiner);
+  public static <T, T1, T2, A1, A2, R1, R2> Collector<T, ?, Tuple2<R1, R2>> partition(
+      Function<? super T, ? extends Either<T1, T2>> splitter,
+      Collector<? super T1, A1, R1> first,
+      Collector<? super T2, A2, R2> second
+  ) {
+    return partition(splitter, first, second, Tuple::of);
   }
 
-  public static <T1, R1, T2, R2, R> Collector<Either<T1, T2>, Tuple2<?, ?>, R> partition(
-      Collector<T1, ?, R1> first,
-      Collector<T2, ?, R2> second,
-      BiFunction<R1, R2, R> joiner) {
-    BiConsumer<Object, T1> firstAccumulator = (BiConsumer<Object, T1>) first.accumulator();
-    BiConsumer<Object, T2> secondAccumulator = (BiConsumer<Object, T2>) second.accumulator();
-    BinaryOperator<Object> firstCombiner = (BinaryOperator<Object>) first.combiner();
-    BinaryOperator<Object> secondCombiner = (BinaryOperator<Object>) second.combiner();
-    Function<Object, R1> firstFinisher = (Function<Object, R1>) first.finisher();
-    Function<Object, R2> secondFinisher = (Function<Object, R2>) second.finisher();
+  public static <T1, T2, A1, A2, R, R1, R2> Collector<Either<T1, T2>, ?, R> partition(
+      Collector<? super T1, A1, R1> first,
+      Collector<? super T2, A2, R2> second,
+      BiFunction<R1, R2, R> joiner
+  ) {
+    return partition(identity(), first, second, joiner);
+  }
+
+  public static <T, T1, T2, A1, A2, R, R1, R2> Collector<T, ?, R> partition(
+      Function<? super T, ? extends Either<T1, T2>> splitter,
+      Collector<? super T1, A1, R1> first,
+      Collector<? super T2, A2, R2> second,
+      BiFunction<R1, R2, R> joiner
+  ) {
+    BiConsumer<A1, ? super T1> firstAccumulator = first.accumulator();
+    BiConsumer<A2, ? super T2> secondAccumulator = second.accumulator();
+    BinaryOperator<A1> firstCombiner = first.combiner();
+    BinaryOperator<A2> secondCombiner = second.combiner();
+    Function<A1, R1> firstFinisher = first.finisher();
+    Function<A2, R2> secondFinisher = second.finisher();
+
     return new SimpleCollector<>(
         () -> Tuple.of(first.supplier().get(), second.supplier().get()),
-        (tuple, either) -> either.peekLeft(t -> firstAccumulator.accept(tuple._1(), t))
+        (tuple, o) -> splitter.apply(o).peekLeft(t -> firstAccumulator.accept(tuple._1(), t))
             .peek(f -> secondAccumulator.accept(tuple._2(), f)),
         (o1, o2) -> o1.map((it1, it2) -> o2
             .map((it11, it22) -> Tuple.of(firstCombiner.apply(it1, it11), secondCombiner.apply(it2, it22)))),
@@ -92,18 +109,22 @@ public class Collect {
   }
 
   public static <K, V, KK, VV> Collector<Entry<K, V>, Map<KK, VV>, Map<KK, VV>> toMapFromEntries(
-      Function<? super K, ? extends KK> keyMapper,
-      Function<? super V, ? extends VV> valueMapper) {
-    return toMap(e -> keyMapper.apply(e.getKey()), e -> valueMapper.apply(e.getValue()));
+      Function<? super K, ? extends KK> keyExtractor,
+      Function<? super V, ? extends VV> valueExtractor) {
+    return toMap(e -> keyExtractor.apply(e.getKey()), e -> valueExtractor.apply(e.getValue()));
+  }
+
+  public static <T, KK> Collector<T, Map<KK, T>, Map<KK, T>> toMap(Function<? super T, ? extends KK> keyExtractor) {
+    return toMap(keyExtractor, identity());
   }
 
   //See Bug https://bugs.openjdk.java.net/browse/JDK-8148463
   public static <T, KK, VV> Collector<T, Map<KK, VV>, Map<KK, VV>> toMap(
-      Function<? super T, ? extends KK> keyMapper,
-      Function<? super T, ? extends VV> valueMapper) {
+      Function<? super T, ? extends KK> keyExtractor,
+      Function<? super T, ? extends VV> valueExtractor) {
     return new SimpleCollector<>(
         HashMap::new,
-        (m, t) -> m.put(keyMapper.apply(t), valueMapper.apply(t)),
+        (m, t) -> m.put(keyExtractor.apply(t), valueExtractor.apply(t)),
         (l1, l2) -> {
           l1.putAll(l2);
           return l1;

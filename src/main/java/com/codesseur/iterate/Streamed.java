@@ -1,5 +1,6 @@
 package com.codesseur.iterate;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.function.Function.identity;
@@ -55,10 +56,12 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   static <T> Streamed<T> of(Iterator<? extends T> values) {
+    requireNonNull(values);
     return () -> StreamSupport.stream(spliteratorUnknownSize(values, ORDERED), false);
   }
 
   static <T> Streamed<T> of(Iterable<? extends T> values) {
+    requireNonNull(values);
     return of(StreamSupport.stream(values.spliterator(), false));
   }
 
@@ -281,11 +284,14 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default <E> Streamed<Tuple2<T, E>> flatMapSticky(Function<? super T, ? extends Stream<E>> mapper) {
+    requireNonNull(mapper);
     return flatMap(e1 -> mapper.apply(e1).map(e -> Tuple.of(e1, e)));
   }
 
   default <E> Streamed<E> mapTryOtherwise(CheckedFunction1<? super T, ? extends E> mapper,
       Function<? super Throwable, ? extends E> otherwise) {
+    requireNonNull(mapper);
+    requireNonNull(otherwise);
     return map(v -> {
       try {
         return mapper.apply(v);
@@ -296,15 +302,19 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default <E> Streamed<E> mapTry(CheckedFunction1<? super T, ? extends E> mapper) {
+    requireNonNull(mapper);
     return map(Unchecks.Func.uncheck(mapper));
   }
 
   default Streamed<T> mapLast(Function<? super T, ? extends T> last) {
+    requireNonNull(last);
     return mapLastOtherwise(last, identity());
   }
 
   default <E> Streamed<E> mapLastOtherwise(Function<? super T, ? extends E> last,
       Function<? super T, ? extends E> other) {
+    requireNonNull(last);
+    requireNonNull(other);
     return map(other, other, last, MappingPriority.LAST);
   }
 
@@ -547,6 +557,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   default <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyExtractor,
       Function<? super T, ? extends V> valueExtractor) {
     return collect(Collect.toMap(keyExtractor, valueExtractor));
+  }
+
+  default <K> Dictionary<K, T> toDictionary(Function<? super T, ? extends K> keyExtractor) {
+    return Dictionary.of(toMap(keyExtractor));
   }
 
   default <K, V> Dictionary<K, V> toDictionary(Function<? super T, ? extends K> keyExtractor,

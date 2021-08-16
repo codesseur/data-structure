@@ -5,6 +5,7 @@ import static java.util.function.Function.identity;
 import com.codesseur.MicroType;
 import com.codesseur.iterate.Collect;
 import com.codesseur.iterate.Streamed;
+import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +42,10 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
     return Bag.of(value().keySet());
   }
 
+  default Sequence<V> values() {
+    return Sequence.of(value().values());
+  }
+
   default boolean hasKey(K key) {
     return value().containsKey(key);
   }
@@ -57,8 +62,8 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
     return map(keyMapper, identity());
   }
 
-  default <VV> Dictionary<K, VV> mapValue(Function<? super V, ? extends VV> keyMapper) {
-    return map(identity(), keyMapper);
+  default <VV> Dictionary<K, VV> mapValue(Function<? super V, ? extends VV> valueMapper) {
+    return map(identity(), valueMapper);
   }
 
   default <KK, VV> Dictionary<KK, VV> map(Function<? super K, ? extends KK> keyMapper,
@@ -74,12 +79,54 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
     return stream().mapPartial(e -> mapper.apply(e.getKey(), e.getValue()));
   }
 
+  default Dictionary<K, V> remove(K key) {
+    return remove(key, v -> v)._1();
+  }
+
+  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> remove(K key, Function<? super V, ? extends VV> ifOldPresent) {
+    HashMap<K, V> map = new HashMap<>(value());
+    V old = map.remove(key);
+    return Tuple.of(new SimpleDictionary<>(map), Optional.ofNullable(old).map(ifOldPresent));
+  }
+
   default Dictionary<K, V> replace(K key, BiFunction<? super K, ? super V, ? extends V> mapper) {
-    return get(key).<Dictionary<K, V>>map(v -> {
-      HashMap<K, V> map = new HashMap<>(value());
-      map.put(key, mapper.apply(key, v));
-      return new SimpleDictionary<>(map);
-    }).orElse(this);
+    return replace(key, mapper, (before, after) -> after)._1();
+  }
+
+  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> replace(K key, Function<? super V, ? extends V> mapper,
+      BiFunction<Optional<V>, V, VV> ifReplaced) {
+    return replace(key, (k, v) -> mapper.apply(v), ifReplaced);
+  }
+
+  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> replace(K key,
+      BiFunction<? super K, ? super V, ? extends V> mapper,
+      BiFunction<Optional<V>, V, VV> ifReplaced) {
+    return get(key).map(v -> put(key, mapper.apply(key, v), ifReplaced)).orElse(Tuple.of(this, Optional.empty()));
+  }
+
+  default Dictionary<K, V> replaceIf(BiPredicate<K, V> condition,
+      BiFunction<? super K, ? super V, ? extends V> mapper) {
+    return map((k, v) -> condition.test(k, v) ? Tuple.of(k, mapper.apply(k, v)) : Tuple.of(k, v))
+        .toDictionary(Tuple2::_1, Tuple2::_2);
+  }
+
+  default Dictionary<K, V> put(K key, V value) {
+    return put(key, value, (o, n) -> n)._1();
+  }
+
+  default Dictionary<K, V> put(K key, Function<Optional<V>, V> valueMapper) {
+    return put(key, valueMapper, (o, n) -> n)._1();
+  }
+
+  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> put(K key, Function<Optional<V>, V> valueMapper,
+      BiFunction<Optional<V>, V, VV> ifPut) {
+    return put(key, valueMapper.apply(get(key)), ifPut);
+  }
+
+  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> put(K key, V value, BiFunction<Optional<V>, V, VV> ifPut) {
+    HashMap<K, V> map = new HashMap<>(value());
+    V old = map.put(key, value);
+    return Tuple.of(new SimpleDictionary<>(map), Optional.ofNullable(ifPut.apply(Optional.ofNullable(old), value)));
   }
 
   default Dictionary<K, V> filterKey(Predicate<? super K> filter) {
