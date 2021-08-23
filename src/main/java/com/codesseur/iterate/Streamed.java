@@ -1,5 +1,7 @@
 package com.codesseur.iterate;
 
+import static com.codesseur.SafeCaster.safeCastToStream;
+import static java.util.Comparator.naturalOrder;
 import static java.util.Objects.requireNonNull;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
@@ -13,6 +15,7 @@ import com.codesseur.functions.Unchecks;
 import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Dictionary;
 import com.codesseur.iterate.container.Sequence;
+import com.codesseur.reflect.Type;
 import io.vavr.CheckedFunction1;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
@@ -344,6 +347,14 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return map(mapper).flatMap(v -> StreamSupport.stream(v.spliterator(), false));
   }
 
+  default <E> Streamed<E> safeCast(Class<E> type) {
+    return flatMap(v -> safeCastToStream(v, type));
+  }
+
+  default <E> Streamed<E> safeCast(Type<E> type) {
+    return flatMap(v -> safeCastToStream(v, type));
+  }
+
   default <E> Streamed<E> mapPartial(Function<? super T, ? extends Optional<E>> mapper) {
     return map(mapper).flatMap(Optionals::stream);
   }
@@ -432,6 +443,26 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   default Optional<T> find(Predicate<? super T> condition) {
     return filter(condition).findFirst();
+  }
+
+  default Optional<T> leftClosest(ToLongFunction<? super T> distance) {
+    return closest(distance, t -> t <= 0);
+  }
+
+  default Optional<T> rightClosest(ToLongFunction<? super T> distance) {
+    return closest(distance, t -> t >= 0);
+  }
+
+  default Optional<T> absoluteClosest(ToLongFunction<? super T> distance) {
+    return closest(distance, t -> true);
+  }
+
+  default Optional<T> closest(ToLongFunction<? super T> distance, Predicate<? super Long> distanceFilter) {
+    return map(v -> Tuple.of(distance.applyAsLong(v), v))
+        .filter(t -> distanceFilter.test(t._1))
+        .map(t -> t.map1(Math::abs))
+        .min(naturalOrder())
+        .map(Tuple2::_2);
   }
 
   default <E> E foldLeft(E seed, BiFunction<E, ? super T, E> accumulator) {
@@ -542,7 +573,12 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return collect(Collectors.toSet());
   }
 
-  default <S extends Sequence<T>> S toListThen(Function<? super List<T>, ? extends S> factory) {
+  default <S> Optional<S> ifNotEmpty(Function<? super Streamed<T>, ? extends S> factory) {
+    Iterator<T> iterator = iterator();
+    return iterator.hasNext() ? Optional.of(Streamed.of(iterator)).map(factory) : Optional.empty();
+  }
+
+  default <S> S toListThen(Function<? super List<T>, ? extends S> factory) {
     return factory.apply(toList());
   }
 

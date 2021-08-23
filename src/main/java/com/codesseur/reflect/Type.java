@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public abstract class Type<T> implements SafeCaster {
+public abstract class Type<T> {
 
   private final java.lang.reflect.Type value;
   private final Sequence<Type<?>> typeVariables;
@@ -51,7 +51,7 @@ public abstract class Type<T> implements SafeCaster {
   }
 
   private Sequence<Type<?>> getTypeVariables() {
-    java.lang.reflect.Type[] types = safeCast(value, ParameterizedType.class)
+    java.lang.reflect.Type[] types = SafeCaster.safeCast(value, ParameterizedType.class)
         .map(ParameterizedType::getActualTypeArguments)
         .orElseGet(() -> new java.lang.reflect.Type[0]);
     return Stream.of(types).map(Type::of).collect(Collect.toSequence());
@@ -79,8 +79,8 @@ public abstract class Type<T> implements SafeCaster {
 
   private Optional<Class<T>> raw(java.lang.reflect.Type value) {
     return Optionals.or(
-        safeCast(value, Class.class).map(c -> (Class<T>) c),
-        safeCast(value, ParameterizedType.class).flatMap(t -> raw(t.getRawType())));
+        SafeCaster.safeCast(value, Class.class).map(c -> (Class<T>) c),
+        SafeCaster.safeCast(value, ParameterizedType.class).flatMap(t -> raw(t.getRawType())));
   }
 
   public <E> Optional<E> getIfEquals(Type<?> type, Function<Type<T>, E> mapper) {
@@ -96,7 +96,7 @@ public abstract class Type<T> implements SafeCaster {
   }
 
   public Optional<T> safeCast(Object object) {
-    return safeCast(object, raw());
+    return SafeCaster.safeCast(object, raw());
   }
 
   public Sequence<Field> fields() {
