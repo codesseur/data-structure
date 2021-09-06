@@ -2,9 +2,9 @@ package com.codesseur.iterate;
 
 import static java.util.function.Function.identity;
 
-import java.util.Collections;
 import com.codesseur.Persons;
 import com.codesseur.Products;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -132,7 +132,6 @@ public class CollectionContainerTest {
         .containsOnly("mariamaria", "bobbob", "JOHN", "alice au pays des merveilles");
   }
 
-
   @Test
   public void isEmptyWithEmptyContainer() {
     Persons persons = new Persons();
@@ -165,7 +164,7 @@ public class CollectionContainerTest {
   public void zipWithIndex() {
     Persons persons = new Persons("maria", "bob");
 
-    List<IndexedValue<String>> personsOut = persons.zipWithIndex()
+    List<Indexed<String>> personsOut = persons.zipWithIndex()
         .collect(Collectors.toList());
 
     Assertions.assertThat(personsOut).hasSize(2);
@@ -176,10 +175,10 @@ public class CollectionContainerTest {
   }
 
   @Test
-  public void size() {
+  public void count() {
     Persons persons = new Persons("v1");
 
-    Assertions.assertThat(persons.size()).isEqualTo(1);
+    Assertions.assertThat(persons.count()).isEqualTo(1);
   }
 
   @Test

@@ -17,7 +17,7 @@ public enum MappingPriority {
     return (Function<? super T, ? extends E>) picker.apply(first, last);
   }
 
-  <T, E> E handle(IndexedValue<T> value, Function<? super T, ? extends E> first,
+  <T, E> E handle(Indexed<T> value, Function<? super T, ? extends E> first,
       Function<? super T, ? extends E> middle, Function<? super T, ? extends E> last) {
     if (value.isUnique()) {
       return value.fold(pick(first, last));

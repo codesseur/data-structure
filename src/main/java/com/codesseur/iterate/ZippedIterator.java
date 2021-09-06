@@ -5,9 +5,9 @@ import io.vavr.Tuple2;
 import java.util.Iterator;
 import java.util.Optional;
 
-public class ZippedIterator<K, V> implements Iterator<IndexedValue<Tuple2<Optional<K>, Optional<V>>>> {
+public class ZippedIterator<K, V> implements Iterator<Indexed<Tuple2<Optional<K>, Optional<V>>>> {
 
-  private int index = -1;
+  private long index = -1;
 
   private final Iterator<K> first;
   private final Iterator<V> second;
@@ -20,11 +20,11 @@ public class ZippedIterator<K, V> implements Iterator<IndexedValue<Tuple2<Option
   }
 
   @Override
-  public IndexedValue<Tuple2<Optional<K>, Optional<V>>> next() {
+  public Indexed<Tuple2<Optional<K>, Optional<V>>> next() {
     index++;
     Optional<K> first = getNext(this.first);
     Optional<V> second = getNext(this.second);
-    return new IndexedValue<>(index, Tuple.of(first, second), !hasNext());
+    return new Indexed<>(index, Tuple.of(first, second), !hasNext());
   }
 
   <E> Optional<E> getNext(Iterator<E> iterator) {

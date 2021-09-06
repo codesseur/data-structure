@@ -17,6 +17,7 @@ import com.codesseur.iterate.container.Dictionary;
 import com.codesseur.iterate.container.Sequence;
 import com.codesseur.reflect.Type;
 import io.vavr.CheckedFunction1;
+import io.vavr.PartialFunction;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.Arrays;
@@ -278,6 +279,14 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     stream().close();
   }
 
+  default Streamed<T> peekIf(Predicate<T> condition, Consumer<T> consumer) {
+    return peek(v -> {
+      if (condition.test(v)) {
+        consumer.accept(v);
+      }
+    });
+  }
+
   default Optional<T> head() {
     return findFirst();
   }
@@ -289,6 +298,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   default <E> Streamed<Tuple2<T, E>> flatMapSticky(Function<? super T, ? extends Stream<E>> mapper) {
     requireNonNull(mapper);
     return flatMap(e1 -> mapper.apply(e1).map(e -> Tuple.of(e1, e)));
+  }
+
+  default <E> Streamed<E> map(PartialFunction<? super T, ? extends E> mapper) {
+    return mapPartial(v -> mapper.isDefinedAt(v) ? Optional.ofNullable(mapper.apply(v)) : Optional.empty());
   }
 
   default <E> Streamed<E> mapTryOtherwise(CheckedFunction1<? super T, ? extends E> mapper,
@@ -389,6 +402,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return filter(condition.negate());
   }
 
+  default Streamed<T> removeAt(long index) {
+    return zipWithIndex().flatMap(p -> p.isAt(index) ? Stream.empty() : Stream.of(p.value()));
+  }
+
   default Streamed<T> take(long offset, long length) {
     return skip(offset).limit(length);
   }
@@ -404,31 +421,31 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, E>> innerZip(I second) {
     return zip(second, ZipMode.INTERSECT)
-        .map(IndexedValue::value)
+        .map(Indexed::value)
         .map(p -> p.apply(Optionals::and))
         .flatMap(Optionals::stream);
   }
 
   default <E, I extends Iterable<E>> Streamed<Tuple2<Optional<T>, Optional<E>>> outerZip(I second) {
-    return zip(second, ZipMode.UNION).map(IndexedValue::value);
+    return zip(second, ZipMode.UNION).map(Indexed::value);
   }
 
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, Optional<E>>> leftOuterZip(I second) {
-    return zip(second, ZipMode.UNION).map(IndexedValue::value).mapPartial(t -> t._1().map(v -> t.map1(i -> v)));
+    return zip(second, ZipMode.UNION).map(Indexed::value).mapPartial(t -> t._1().map(v -> t.map1(i -> v)));
   }
 
   default <E, I extends Iterable<E>> Streamed<Tuple2<Optional<T>, E>> rightOuterZip(I second) {
-    return zip(second, ZipMode.UNION).map(IndexedValue::value).mapPartial(t -> t._2().map(v -> t.map2(i -> v)));
+    return zip(second, ZipMode.UNION).map(Indexed::value).mapPartial(t -> t._2().map(v -> t.map2(i -> v)));
   }
 
-  default Streamed<IndexedValue<T>> zipWithIndex() {
+  default Streamed<Indexed<T>> zipWithIndex() {
     return zip(Collections.emptyList(), ZipMode.UNION)
         .map(i -> i.map(Tuple2::_1).map(o -> o.orElse(null)));
   }
 
-  default <E, I extends Iterable<E>> Streamed<IndexedValue<Tuple2<Optional<T>, Optional<E>>>> zip(I second,
+  default <E, I extends Iterable<E>> Streamed<Indexed<Tuple2<Optional<T>, Optional<E>>>> zip(I second,
       ZipMode zipMode) {
-    Iterable<IndexedValue<Tuple2<Optional<T>, Optional<E>>>> iterable = () -> new ZippedIterator<>(stream().iterator(),
+    Iterable<Indexed<Tuple2<Optional<T>, Optional<E>>>> iterable = () -> new ZippedIterator<>(stream().iterator(),
         second.iterator(), zipMode);
     return of(StreamSupport.stream(iterable.spliterator(), false));
   }
@@ -516,9 +533,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return reduce((e1, e2) -> e2);
   }
 
-  default Streamed<T> addAt(T value, int index) {
-    return zipWithIndex()
-        .flatMap(p -> p.isIndexed(index) ? Stream.of(p.value(), value) : Stream.of(p.value()));
+  default Streamed<T> addAt(T value, long index) {
+    return zipWithIndex().flatMap(p -> p.isAt(index) ? Stream.of(p.value(), value) : Stream.of(p.value()));
   }
 
   default Streamed<T> append(T value) {

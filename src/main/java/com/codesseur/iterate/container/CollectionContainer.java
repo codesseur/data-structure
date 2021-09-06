@@ -36,6 +36,11 @@ public interface CollectionContainer<T, C extends Collection<T>> extends Contain
   }
 
   default int size() {
+    return (int) count();
+  }
+
+  @Override
+  default long count() {
     return value().size();
   }
 
