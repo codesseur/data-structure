@@ -20,6 +20,7 @@ import io.vavr.CheckedFunction1;
 import io.vavr.PartialFunction;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import io.vavr.Tuple3;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -298,6 +299,11 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   default <E> Streamed<Tuple2<T, E>> flatMapSticky(Function<? super T, ? extends Stream<E>> mapper) {
     requireNonNull(mapper);
     return flatMap(e1 -> mapper.apply(e1).map(e -> Tuple.of(e1, e)));
+  }
+
+  default <E> Streamed<Tuple2<T, E>> mapSticky(Function<? super T, ? extends E> mapper) {
+    requireNonNull(mapper);
+    return map(e1 -> Tuple.of(e1, mapper.apply(e1)));
   }
 
   default <E> Streamed<E> map(PartialFunction<? super T, ? extends E> mapper) {

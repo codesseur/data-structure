@@ -11,8 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -89,6 +91,10 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
     return Tuple.of(new SimpleDictionary<>(map), Optional.ofNullable(old).map(ifOldPresent));
   }
 
+  default Dictionary<K, V> replace(K key, V value) {
+    return replace(key, (k, v) -> value);
+  }
+
   default Dictionary<K, V> replace(K key, BiFunction<? super K, ? super V, ? extends V> mapper) {
     return replace(key, mapper, (before, after) -> after)._1();
   }
@@ -150,6 +156,18 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
     return new SimpleDictionary<>(
         Stream.concat(stream(), dictionary.stream())
             .collect(Collect.toMapFromEntries(identity(), identity())));
+  }
+
+  default void forEachKey(Consumer<K> consumer) {
+    forEach((k, v) -> consumer.accept(k));
+  }
+
+  default void forEachValue(Consumer<V> consumer) {
+    forEach((k, v) -> consumer.accept(v));
+  }
+
+  default void forEach(BiConsumer<K, V> consumer) {
+    value().forEach(consumer);
   }
 
   default boolean isEmpty() {
