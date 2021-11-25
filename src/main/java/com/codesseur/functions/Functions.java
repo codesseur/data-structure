@@ -7,8 +7,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * This class gather some of the most common function conversions
+ */
 public interface Functions {
 
+  /**
+   * lift  a function to take optional
+   * @param function
+   * @param <T>
+   * @param <R>
+   * @return Lifted functuin
+   */
   static <T, R> Function<Optional<T>, Optional<R>> lift(Function<? super T, ? extends R> function) {
     return o -> o.map(function);
   }

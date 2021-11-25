@@ -3,6 +3,9 @@ package com.codesseur.iterate;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ *
+ */
 public enum MappingPriority {
   FIRST((f, l) -> f), LAST((f, l) -> l);
 

@@ -14,10 +14,7 @@ class UnchecksTest {
   @Test
   void uncheckConsumer() {
     AtomicBoolean b = new AtomicBoolean();
-    Consumer<Boolean> f = Unchecks.Consume.uncheck(newValue -> {
-      System.out.println("hello");
-      b.set(newValue);
-    });
+    Consumer<Boolean> f = Unchecks.Consume.uncheck(b::set);
 
     f.accept(true);
 
@@ -28,7 +25,6 @@ class UnchecksTest {
   void uncheckFunction() {
     AtomicBoolean b = new AtomicBoolean();
     Function<Boolean, Boolean> f = Unchecks.Func.uncheck(newValue -> {
-      System.out.println("hello");
       b.set(newValue);
       return newValue;
     });
@@ -41,10 +37,7 @@ class UnchecksTest {
 
   @Test
   void uncheckBiFunction() {
-    BiFunction<Boolean, Boolean, String> f = Unchecks.Func.uncheck((v1,v2) -> {
-      System.out.println("hello");
-      return "" + v1 + v2;
-    });
+    BiFunction<Boolean, Boolean, String> f = Unchecks.Func.uncheck((v1,v2) -> "" + v1 + v2);
 
     String result = f.apply(true,true);
 
@@ -53,10 +46,7 @@ class UnchecksTest {
 
   @Test
   void uncheckPredicate() {
-    Predicate<String> f = Unchecks.Test.uncheck(v -> {
-      System.out.println("hello");
-      return v.isEmpty();
-    });
+    Predicate<String> f = Unchecks.Test.uncheck(String::isEmpty);
 
     boolean result = f.test("value");
 
@@ -65,10 +55,7 @@ class UnchecksTest {
 
   @Test
   void uncheckSupplier() {
-    Supplier<String> f = Unchecks.Supply.uncheck(() -> {
-      System.out.println("hello");
-      return "value";
-    });
+    Supplier<String> f = Unchecks.Supply.uncheck(() -> "value");
 
     String result = f.get();
 

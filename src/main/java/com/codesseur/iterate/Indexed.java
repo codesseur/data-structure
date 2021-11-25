@@ -44,8 +44,16 @@ public class Indexed<T> {
     return last;
   }
 
+  public boolean isNotLast() {
+    return !isLast();
+  }
+
   public boolean isAt(long index) {
     return index == index();
+  }
+
+  public boolean isNotAt(long index) {
+    return !isAt(index);
   }
 
   public boolean isFirst() {

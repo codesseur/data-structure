@@ -4,6 +4,7 @@ import static java.util.function.Function.identity;
 
 import com.codesseur.Persons;
 import com.codesseur.Products;
+import io.vavr.Tuple2;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +46,7 @@ public class CollectionContainerTest {
   public void mapFirstMiddleLast() {
     Persons persons = new Persons("maria", "bob", "dima");
 
-    Stream<Integer> collect = persons.map(i -> -1, String::length, i -> -1);
+    Stream<Integer> collect = persons.map(i -> -1, String::length, i -> -1, MappingPriority.FIRST);
 
     Assertions.assertThat(collect).containsOnly(-1, 3, -1);
   }
@@ -234,7 +235,7 @@ public class CollectionContainerTest {
   public void fullMinusOnSequence() {
     Persons seq = new Persons("v1", "v2", "v3");
 
-    Assertions.assertThat((Stream<? extends String>) seq.minus(seq)).isEmpty();
+    Assertions.assertThat((Stream<? extends String>) seq.remove(seq)).isEmpty();
   }
 
   @Test
@@ -242,14 +243,14 @@ public class CollectionContainerTest {
     Persons seq1 = new Persons("v1", "v2", "v3");
     Persons seq2 = new Persons("v1", "v4");
 
-    Assertions.assertThat((Stream<String>) seq1.minus(seq2)).containsOnly("v2", "v3");
+    Assertions.assertThat((Stream<String>) seq1.remove(seq2)).containsOnly("v2", "v3");
   }
 
   @Test
   public void fullMinusOnBag() {
     Products bag = new Products("v1", "v2", "v3");
 
-    Assertions.assertThat((Stream<? extends String>) bag.minus(bag)).isEmpty();
+    Assertions.assertThat((Stream<? extends String>) bag.remove(bag)).isEmpty();
   }
 
   @Test
@@ -257,7 +258,99 @@ public class CollectionContainerTest {
     Products bag1 = new Products("v1", "v2", "v3");
     Products bag2 = new Products("v1", "v4");
 
-    Assertions.assertThat((Stream<String>) bag1.minus(bag2)).containsOnly("v2", "v3");
+    Assertions.assertThat((Stream<String>) bag1.remove(bag2)).containsOnly("v2", "v3");
   }
 
+  @Test
+  public void foldLeftWithSeed() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.foldLeft(() -> 0, (v, e) -> v + e.length())).isEqualTo(6);
+  }
+
+  @Test
+  public void foldLeftWithSeedFunction() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.foldLeft(String::length, (v, e) -> v + e.length())).hasValue(6);
+  }
+
+  @Test
+  public void foldLeft() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.foldLeft((v, v2) -> v + v2)).hasValue("v1v2v3");
+  }
+
+  @Test
+  public void foldRightWithSeed() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.foldRight(() -> 0, (e, v) -> v + e.length())).isEqualTo(6);
+  }
+
+  @Test
+  public void foldRightWithSeedFunction() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.foldRight(String::length, (e, v) -> v + e.length())).hasValue(6);
+  }
+
+  @Test
+  public void foldRight() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.foldRight((v2, v) -> v + v2)).hasValue("v3v2v1");
+  }
+
+  @Test
+  public void headTailLeadLastNotEmpty() {
+    Persons persons = new Persons("v1", "v2", "v3");
+
+    Assertions.assertThat(persons.head()).hasValue("v1");
+    Assertions.assertThat((Stream<String>) persons.tail()).containsExactly("v2", "v3");
+    Tuple2<Optional<String>, Streamed<String>> headAndTail = persons.headAndTail();
+    Assertions.assertThat(headAndTail._1()).hasValue("v1");
+    Assertions.assertThat((Stream<String>) headAndTail._2()).containsExactly("v2", "v3");
+
+    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.leadAndLast();
+    Assertions.assertThat(persons.last()).hasValue("v3");
+    Assertions.assertThat((Stream<String>) persons.lead()).containsExactly("v1", "v2");
+    Assertions.assertThat(leadAndLAst._2()).hasValue("v3");
+    Assertions.assertThat((Stream<String>) leadAndLAst._1()).containsExactly("v1", "v2");
+  }
+
+  @Test
+  public void headTailLeadLastEmpty() {
+    Persons persons = new Persons();
+
+    Assertions.assertThat(persons.head()).isEmpty();
+    Assertions.assertThat((Stream<String>) persons.tail()).isEmpty();
+    Tuple2<Optional<String>, Streamed<String>> headAndTail = persons.headAndTail();
+    Assertions.assertThat(headAndTail._1()).isEmpty();
+    Assertions.assertThat((Stream<String>) headAndTail._2()).isEmpty();
+
+    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.leadAndLast();
+    Assertions.assertThat(persons.last()).isEmpty();
+    Assertions.assertThat((Stream<String>) persons.lead()).isEmpty();
+    Assertions.assertThat(leadAndLAst._2()).isEmpty();
+    Assertions.assertThat((Stream<String>) leadAndLAst._1()).isEmpty();
+  }
+
+  @Test
+  public void headTailLeadLastWithOneElement() {
+    Persons persons = new Persons("v1");
+
+    Assertions.assertThat(persons.head()).hasValue("v1");
+    Assertions.assertThat((Stream<String>) persons.tail()).isEmpty();
+    Tuple2<Optional<String>, Streamed<String>> headAndTail = persons.headAndTail();
+    Assertions.assertThat(headAndTail._1()).hasValue("v1");
+    Assertions.assertThat((Stream<String>) headAndTail._2()).isEmpty();
+
+    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.leadAndLast();
+    Assertions.assertThat(persons.last()).hasValue("v1");
+    Assertions.assertThat((Iterable<String>) persons.lead()).isEmpty();
+    Assertions.assertThat(leadAndLAst._2()).hasValue("v1");
+    Assertions.assertThat((Stream<String>) leadAndLAst._1()).isEmpty();
+  }
 }

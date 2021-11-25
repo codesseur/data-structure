@@ -20,7 +20,6 @@ import io.vavr.CheckedFunction1;
 import io.vavr.PartialFunction;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
-import io.vavr.Tuple3;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,6 +50,12 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * The main class for streaming data. it combines the functionalities of java.util.stream.Stream and more...
+ *
+ * @param <T>
+ * @see java.util.stream.Stream
+ */
 public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   Stream<T> stream();
@@ -280,36 +285,106 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     stream().close();
   }
 
-  default Streamed<T> peekIf(Predicate<T> condition, Consumer<T> consumer) {
+  /**
+   * calls the peek consumer if the condition is matched
+   *
+   * @param condition
+   * @param peek
+   * @return
+   */
+  default Streamed<T> peekIf(Predicate<T> condition, Consumer<T> peek) {
     return peek(v -> {
       if (condition.test(v)) {
-        consumer.accept(v);
+        peek.accept(v);
       }
     });
   }
 
+  /**
+   * @return the first element of the stream if present
+   */
   default Optional<T> head() {
     return findFirst();
   }
 
+  /**
+   * @return the remaining elements of the stream skipping the first one
+   */
   default Streamed<T> tail() {
     return skip(1);
   }
 
+  /**
+   * @return split the stream in two head and tail
+   */
+  default Tuple2<Optional<T>, Streamed<T>> headAndTail() {
+    return Tuple.of(head(), tail());
+  }
+
+  /**
+   * @return split the stream in two lead and last
+   */
+  default Tuple2<Streamed<T>, Optional<T>> leadAndLast() {
+    return Tuple.of(lead(), last());
+  }
+
+  /**
+   * @return the leading elements of the stream skipping the last one
+   */
+  default Streamed<T> lead() {
+    return zipWithIndex().filter(Indexed::isNotLast).map(Indexed::value);
+  }
+
+  /**
+   * @return the last element of the stream if present
+   */
+  default Optional<T> last() {
+    return reduce((e1, e2) -> e2);
+  }
+
+  /**
+   * flatMap then pair with the original element
+   *
+   * @param mapper
+   * @param <E>
+   * @return
+   */
   default <E> Streamed<Tuple2<T, E>> flatMapSticky(Function<? super T, ? extends Stream<E>> mapper) {
     requireNonNull(mapper);
     return flatMap(e1 -> mapper.apply(e1).map(e -> Tuple.of(e1, e)));
   }
 
+  /**
+   * map then pair with the original element
+   *
+   * @param mapper
+   * @param <E>
+   * @return
+   */
   default <E> Streamed<Tuple2<T, E>> mapSticky(Function<? super T, ? extends E> mapper) {
     requireNonNull(mapper);
     return map(e1 -> Tuple.of(e1, mapper.apply(e1)));
   }
 
+  /**
+   * map using a partial function (function defined only for a certain input)
+   *
+   * @param mapper
+   * @param <E>
+   * @return
+   */
   default <E> Streamed<E> map(PartialFunction<? super T, ? extends E> mapper) {
     return mapPartial(v -> mapper.isDefinedAt(v) ? Optional.ofNullable(mapper.apply(v)) : Optional.empty());
   }
 
+  /**
+   * map using a checked function, if an exception is thrown then call the otherwise function
+   *
+   * @param mapper
+   * @param otherwise
+   * @param <E>
+   * @return
+   */
   default <E> Streamed<E> mapTryOtherwise(CheckedFunction1<? super T, ? extends E> mapper,
       Function<? super Throwable, ? extends E> otherwise) {
     requireNonNull(mapper);
@@ -323,16 +398,35 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     });
   }
 
+  /**
+   * map using a checked function, if an exception is thrown then it will be rethrown
+   *
+   * @param mapper
+   * @param <E>
+   */
   default <E> Streamed<E> mapTry(CheckedFunction1<? super T, ? extends E> mapper) {
     requireNonNull(mapper);
     return map(Unchecks.Func.uncheck(mapper));
   }
 
+  /**
+   * map the last element of the stream
+   *
+   * @param last
+   */
   default Streamed<T> mapLast(Function<? super T, ? extends T> last) {
     requireNonNull(last);
     return mapLastOtherwise(last, identity());
   }
 
+  /**
+   * map the last element of the stream using the {@code last} function and the others using the {@code other} function.
+   * If the stream contains only one element the {@code last} function will be called
+   *
+   * @param last
+   * @param other
+   * @param <E>
+   */
   default <E> Streamed<E> mapLastOtherwise(Function<? super T, ? extends E> last,
       Function<? super T, ? extends E> other) {
     requireNonNull(last);
@@ -340,21 +434,38 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return map(other, other, last, MappingPriority.LAST);
   }
 
+  /**
+   * map the first element of the stream
+   *
+   * @param first
+   */
   default Streamed<T> mapFirst(Function<? super T, ? extends T> first) {
     return mapFirstOtherwise(first, identity());
   }
 
+  /**
+   * map the first element of the stream using the {@code first} function and the others using the {@code other}
+   * function. If the stream contains only one element the {@code first} function will be called
+   *
+   * @param first
+   * @param other
+   * @param <E>
+   */
   default <E> Streamed<E> mapFirstOtherwise(Function<? super T, ? extends E> first,
       Function<? super T, ? extends E> other) {
     return map(first, other, other, MappingPriority.FIRST);
   }
 
-  default <E> Streamed<E> map(Function<? super T, ? extends E> first,
-      Function<? super T, ? extends E> middle,
-      Function<? super T, ? extends E> last) {
-    return map(first, middle, last, MappingPriority.FIRST);
-  }
-
+  /**
+   * map the first element of the stream using the {@code first} function,the last element of the stream using the
+   * {@code last} function and the others using the {@code middle} function. If the stream contains only one element the
+   * {@code mappingPriority} will determine whether to call the {@code first} function or the {@code last} function
+   *
+   * @param first
+   * @param middle
+   * @param last
+   * @param <E>
+   */
   default <E> Streamed<E> map(Function<? super T, ? extends E> first,
       Function<? super T, ? extends E> middle,
       Function<? super T, ? extends E> last,
@@ -362,35 +473,88 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return zipWithIndex().map(i -> mappingPriority.handle(i, first, middle, last));
   }
 
+  /**
+   * flatMap from an iterable
+   *
+   * @param mapper
+   * @param <E>
+   */
   default <E> Streamed<E> flatMapIterable(Function<? super T, ? extends Iterable<E>> mapper) {
     return map(mapper).flatMap(v -> StreamSupport.stream(v.spliterator(), false));
   }
 
+  /**
+   * try to cast the elements to {@code type} ignoring those which doesn't
+   *
+   * @param type
+   * @param <E>
+   */
   default <E> Streamed<E> safeCast(Class<E> type) {
     return flatMap(v -> safeCastToStream(v, type));
   }
 
+  /**
+   * try to cast the elements to {@code type} ignoring those which doesn't
+   *
+   * @param type
+   * @param <E>
+   */
   default <E> Streamed<E> safeCast(Type<E> type) {
     return flatMap(v -> safeCastToStream(v, type));
   }
 
+  /**
+   * map elements ignoring empty results
+   *
+   * @param mapper
+   * @param <E>
+   */
   default <E> Streamed<E> mapPartial(Function<? super T, ? extends Optional<E>> mapper) {
     return map(mapper).flatMap(Optionals::stream);
   }
 
+  /**
+   * replace element if condition matched
+   *
+   * @param condition
+   * @param value
+   */
   default Streamed<T> replaceIf(Predicate<T> condition, T value) {
     return replaceIf(condition, i -> value);
   }
 
+  /**
+   * replace element using the {@code mapper} function if condition matched
+   *
+   * @param condition
+   * @param mapper
+   */
   default Streamed<T> replaceIf(Predicate<T> condition, Function<? super T, ? extends T> mapper) {
     return replaceIfOr(condition, mapper, () -> this);
   }
 
+  /**
+   * replace element using the {@code mapper} function if {@code condition} matched or else append a new element from
+   * {@code supplier}
+   *
+   * @param condition
+   * @param mapper
+   * @param append
+   */
   default Streamed<T> replaceIfOrAppend(Predicate<T> condition, Function<? super T, ? extends T> mapper,
       Supplier<? extends T> append) {
     return replaceIfOr(condition, mapper, () -> append(append.get()));
   }
 
+  /**
+   * replace element using the {@code mapper} function if {@code condition} matched or else append a stream from {@code
+   * otherwise}
+   *
+   * @param condition
+   * @param mapper
+   * @param otherwise
+   * @return
+   */
   default Streamed<T> replaceIfOr(Predicate<T> condition, Function<? super T, ? extends T> mapper,
       Supplier<? extends Streamed<T>> otherwise) {
     AtomicBoolean found = new AtomicBoolean(false);
@@ -404,27 +568,62 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return found.get() ? ts : otherwise.get();
   }
 
+  /**
+   * remove element if condition matched
+   *
+   * @param condition
+   */
   default Streamed<T> removeIf(Predicate<T> condition) {
     return filter(condition.negate());
   }
 
+  /**
+   * remove element at a certain index
+   *
+   * @param index
+   */
   default Streamed<T> removeAt(long index) {
-    return zipWithIndex().flatMap(p -> p.isAt(index) ? Stream.empty() : Stream.of(p.value()));
+    return zipWithIndex().filter(p -> p.isNotAt(index)).map(Indexed::value);
   }
 
+  /**
+   * truncate stream from offset to offset+length exclusive
+   *
+   * @param offset
+   * @param length
+   */
   default Streamed<T> take(long offset, long length) {
     return skip(offset).limit(length);
   }
 
+  /**
+   * keep only distinct elements using keyExtractor resolving duplicates if exists with duplicateResolver
+   *
+   * @param keyExtractor
+   * @param duplicateResolver
+   */
   default Streamed<T> distinctBy(Function<? super T, ?> keyExtractor, BinaryOperator<T> duplicateResolver) {
     return of(collect(groupingBy(keyExtractor, reducing(duplicateResolver))).values()).flatMap(Optionals::stream);
   }
 
+  /**
+   * keep only distinct elements using keyExtractor
+   *
+   * @param keyExtractor
+   */
   default Streamed<T> distinctBy(Function<? super T, ?> keyExtractor) {
     Set<Object> seen = ConcurrentHashMap.newKeySet();
     return filter(t -> seen.add(keyExtractor.apply(t)));
   }
 
+  /**
+   * zip elements with the iterable keeping only elements from both ends
+   *
+   * @param second
+   * @param <E>
+   * @param <I>
+   * @return
+   */
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, E>> innerZip(I second) {
     return zip(second, ZipMode.INTERSECT)
         .map(Indexed::value)
@@ -432,23 +631,56 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
         .flatMap(Optionals::stream);
   }
 
+  /**
+   * zip elements with the iterable keeping all elements
+   *
+   * @param second
+   * @param <E>
+   * @param <I>
+   */
   default <E, I extends Iterable<E>> Streamed<Tuple2<Optional<T>, Optional<E>>> outerZip(I second) {
     return zip(second, ZipMode.UNION).map(Indexed::value);
   }
 
+  /**
+   * zip elements with the iterable keeping all elements of the left end
+   *
+   * @param second
+   * @param <E>
+   * @param <I>
+   */
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, Optional<E>>> leftOuterZip(I second) {
     return zip(second, ZipMode.UNION).map(Indexed::value).mapPartial(t -> t._1().map(v -> t.map1(i -> v)));
   }
 
+  /**
+   * zip elements with the iterable keeping all elements of the right end
+   *
+   * @param second
+   * @param <E>
+   * @param <I>
+   */
   default <E, I extends Iterable<E>> Streamed<Tuple2<Optional<T>, E>> rightOuterZip(I second) {
     return zip(second, ZipMode.UNION).map(Indexed::value).mapPartial(t -> t._2().map(v -> t.map2(i -> v)));
   }
 
+  /**
+   * zip elements with their respective index
+   */
   default Streamed<Indexed<T>> zipWithIndex() {
     return zip(Collections.emptyList(), ZipMode.UNION)
         .map(i -> i.map(Tuple2::_1).map(o -> o.orElse(null)));
   }
 
+  /**
+   * zip elements with the iterable using zipMode whether to keeping all (UNION) or only(INTERSECT) elements of the both
+   * ends
+   *
+   * @param second
+   * @param zipMode
+   * @param <E>
+   * @param <I>
+   */
   default <E, I extends Iterable<E>> Streamed<Indexed<Tuple2<Optional<T>, Optional<E>>>> zip(I second,
       ZipMode zipMode) {
     Iterable<Indexed<Tuple2<Optional<T>, Optional<E>>>> iterable = () -> new ZippedIterator<>(stream().iterator(),
@@ -456,31 +688,46 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return of(StreamSupport.stream(iterable.spliterator(), false));
   }
 
+  /**
+   * check if stream contains element
+   *
+   * @param element
+   */
   default boolean contains(T element) {
     return contains(e -> e.equals(element));
   }
 
+  /**
+   * check if stream has a matching condition
+   *
+   * @param condition
+   */
   default boolean contains(Predicate<? super T> condition) {
     return anyMatch(condition);
   }
 
+  /**
+   * find the first element giving a condition
+   *
+   * @param condition
+   */
   default Optional<T> find(Predicate<? super T> condition) {
     return filter(condition).findFirst();
   }
 
-  default Optional<T> leftClosest(ToLongFunction<? super T> distance) {
-    return closest(distance, t -> t <= 0);
+  default Optional<T> findLeftClosest(ToLongFunction<? super T> distance) {
+    return findClosest(distance, t -> t <= 0);
   }
 
-  default Optional<T> rightClosest(ToLongFunction<? super T> distance) {
-    return closest(distance, t -> t >= 0);
+  default Optional<T> findRightClosest(ToLongFunction<? super T> distance) {
+    return findClosest(distance, t -> t >= 0);
   }
 
-  default Optional<T> absoluteClosest(ToLongFunction<? super T> distance) {
-    return closest(distance, t -> true);
+  default Optional<T> findClosest(ToLongFunction<? super T> distance) {
+    return findClosest(distance, t -> true);
   }
 
-  default Optional<T> closest(ToLongFunction<? super T> distance, Predicate<? super Long> distanceFilter) {
+  default Optional<T> findClosest(ToLongFunction<? super T> distance, Predicate<? super Long> distanceFilter) {
     return map(v -> Tuple.of(distance.applyAsLong(v), v))
         .filter(t -> distanceFilter.test(t._1))
         .map(t -> t.map1(Math::abs))
@@ -488,16 +735,20 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
         .map(Tuple2::_2);
   }
 
-  default <E> E foldLeft(E seed, BiFunction<E, ? super T, E> accumulator) {
-    return reduce(seed, accumulator, (v1, v2) -> v1);
+  default <E> E foldLeft(Supplier<E> seed, BiFunction<E, ? super T, E> accumulator) {
+    return reduce(seed.get(), accumulator, (v1, v2) -> v1);
   }
 
   default Optional<T> foldLeft(BinaryOperator<T> accumulator) {
     return reduce(accumulator);
   }
 
-  default <E> E foldRight(E seed, BiFunction<? super T, E, E> accumulator) {
-    E result = seed;
+  default <E> Optional<E> foldLeft(Function<? super T, ? extends E> seed, BiFunction<E, ? super T, E> accumulator) {
+    return headAndTail().apply((head, tail) -> head.map(v -> tail.foldLeft(() -> seed.apply(v), accumulator)));
+  }
+
+  default <E> E foldRight(Supplier<E> seed, BiFunction<? super T, E, E> accumulator) {
+    E result = seed.get();
     final List<T> list = toList();
     for (int i = list.size() - 1; i >= 0; i--) {
       result = accumulator.apply(list.get(i), result);
@@ -506,7 +757,11 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default Optional<T> foldRight(BinaryOperator<T> accumulator) {
-    return foldRight(Optional.empty(), (t1, e) -> e.map(v -> accumulator.apply(t1, v)));
+    return foldRight(identity(), accumulator);
+  }
+
+  default <E> Optional<E> foldRight(Function<? super T, ? extends E> seed, BiFunction<? super T, E, E> accumulator) {
+    return leadAndLast().apply((lead, last) -> last.map(v -> lead.foldRight(() -> seed.apply(v), accumulator)));
   }
 
   default <TT, I extends Iterable<TT>> Joiner<T, TT> join(I iterable) {
@@ -517,26 +772,21 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return filter(e -> keys.contains(extractor.apply(e)));
   }
 
-  default <R, A, I extends Iterable<T>> R minus(I iterable, Collector<? super T, A, R> collector) {
-    return minusBy(iterable, identity(), collector);
+  default Streamed<T> remove(T value) {
+    return remove(value);
   }
 
-  default <I extends Iterable<T>> Streamed<T> minus(I iterable) {
-    return minusBy(iterable, identity());
+  default Streamed<T> remove(T... value) {
+    return removeBy(List.of(value), identity());
   }
 
-  default <R, A, I extends Iterable<T>> R minusBy(I iterable, Function<? super T, ?> by,
-      Collector<? super T, A, R> collector) {
-    return minusBy(iterable, by).collect(collector);
+  default <I extends Iterable<T>> Streamed<T> remove(I iterable) {
+    return removeBy(iterable, identity());
   }
 
-  default <I extends Iterable<T>> Streamed<T> minusBy(I iterable, Function<? super T, ?> by) {
-    Set<?> keys = Streamed.of(iterable).map(by).collect(Collectors.toSet());
+  default <I extends Iterable<T>> Streamed<T> removeBy(I iterable, Function<? super T, ?> by) {
+    Set<?> keys = Streamed.of(iterable).map(by).toSet();
     return of(stream().filter(e -> !keys.contains(by.apply(e))));
-  }
-
-  default Optional<T> last() {
-    return reduce((e1, e2) -> e2);
   }
 
   default Streamed<T> addAt(T value, long index) {
