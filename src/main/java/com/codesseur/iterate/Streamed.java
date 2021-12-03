@@ -773,7 +773,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default Streamed<T> remove(T value) {
-    return remove(value);
+    return removeBy(List.of(value), identity());
   }
 
   default Streamed<T> remove(T... value) {
