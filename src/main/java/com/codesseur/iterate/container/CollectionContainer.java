@@ -44,7 +44,7 @@ public interface CollectionContainer<T, C extends Collection<T>> extends Contain
 
   default <E> E appendUnique(T value, Function<? super Streamed<T>, ? extends E> ifAppended,
       Function<? super Streamed<T>, ? extends E> ifNotAppended) {
-    if (contains(value)) {
+    if (notContains(value)) {
       return ifAppended.apply(append(value));
     } else {
       return ifNotAppended.apply(this);
