@@ -1,6 +1,7 @@
 package com.codesseur.iterate;
 
 import static com.codesseur.SafeCaster.safeCastToStream;
+import static com.codesseur.iterate.SplitMode.RIGHT;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Objects.requireNonNull;
 import static java.util.Spliterator.ORDERED;
@@ -20,6 +21,8 @@ import io.vavr.CheckedFunction1;
 import io.vavr.PartialFunction;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import io.vavr.control.Either;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -686,6 +689,52 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     Iterable<Indexed<Tuple2<Optional<T>, Optional<E>>>> iterable = () -> new ZippedIterator<>(stream().iterator(),
         second.iterator(), zipMode);
     return of(StreamSupport.stream(iterable.spliterator(), false));
+  }
+
+  /**
+   * ignore elements until
+   */
+  default Streamed<T> ignoreUntil(Predicate<T> start) {
+    return Streamed.of(foldLeft((Supplier<ArrayList<T>>) ArrayList::new, (list, v) -> {
+      if (start.test(v)) {
+        list.clear();
+      } else {
+        list.add(v);
+      }
+      return list;
+    }));
+  }
+
+  /**
+   * split stream by size then apply then function
+   */
+  default <E> Streamed<E> splitThen(int size, Function<Streamed<T>, E> then) {
+    return split(size).map(then);
+  }
+
+  /**
+   * split stream by size
+   */
+  default Streamed<Streamed<T>> split(int size) {
+    return zipWithIndex().split(v -> v.isNotFirst() && v.indexMultipleOf(size), RIGHT).map(s -> s.map(Indexed::value));
+  }
+
+  /**
+   * split stream based on a predicate and a split mode
+   */
+  default Streamed<Streamed<T>> split(Predicate<T> start, SplitMode splitMode) {
+    Function<T, Optional<Either<T, T>>> junction;
+    switch (splitMode) {
+      case LEFT:
+        junction = v -> Optional.of(Either.left(v));
+        break;
+      case RIGHT:
+        junction = v -> Optional.of(Either.right(v));
+        break;
+      default:
+        junction = v -> Optional.empty();
+    }
+    return Streamed.of(new SplitIterator<>(iterator(), start, junction)).map(Streamed::of);
   }
 
   /**

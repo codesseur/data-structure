@@ -353,4 +353,49 @@ public class CollectionContainerTest {
     Assertions.assertThat(leadAndLAst._2()).hasValue("v1");
     Assertions.assertThat((Stream<String>) leadAndLAst._1()).isEmpty();
   }
+
+  @Test
+  public void splitWithIgnoreMode() {
+    Persons persons = new Persons("v1", " ", "v2");
+
+    List<List<String>> split = persons.split(v -> v.equals(" "), SplitMode.IGNORE).map(Streamed::toList).toList();
+
+    Assertions.assertThat(split).containsExactly(List.of("v1"), List.of("v2"));
+  }
+
+  @Test
+  public void splitWithLeftMode() {
+    Persons persons = new Persons("v1", " ", "v2");
+
+    List<List<String>> split = persons.split(v -> v.equals(" "), SplitMode.LEFT).map(Streamed::toList).toList();
+
+    Assertions.assertThat(split).containsExactly(List.of("v1", " "), List.of("v2"));
+  }
+
+  @Test
+  public void splitWithRightMode() {
+    Persons persons = new Persons("v1", " ", "v2");
+
+    List<List<String>> split = persons.split(v -> v.equals(" "), SplitMode.RIGHT).map(Streamed::toList).toList();
+
+    Assertions.assertThat(split).containsExactly(List.of("v1"), List.of(" ", "v2"));
+  }
+
+  @Test
+  public void splitBySize2() {
+    Persons persons = new Persons("v1", " ", "v2");
+
+    List<List<String>> split = persons.split(2).map(Streamed::toList).toList();
+
+    Assertions.assertThat(split).containsExactly(List.of("v1", " "), List.of("v2"));
+  }
+
+  @Test
+  public void splitBySize3() {
+    Persons persons = new Persons("v1", " ", "v2");
+
+    List<List<String>> split = persons.split(3).map(Streamed::toList).toList();
+
+    Assertions.assertThat(split).containsExactly(List.of("v1", " ", "v2"));
+  }
 }

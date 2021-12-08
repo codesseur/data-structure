@@ -28,6 +28,10 @@ public class Indexed<T> {
     return index;
   }
 
+  public boolean indexMultipleOf(int multiple) {
+    return index % multiple == 0;
+  }
+
   public T value() {
     return value;
   }
@@ -58,6 +62,10 @@ public class Indexed<T> {
 
   public boolean isFirst() {
     return isAt(0);
+  }
+
+  public boolean isNotFirst() {
+    return !isFirst();
   }
 
   public boolean isUnique() {

@@ -1,8 +1,10 @@
 package com.codesseur.iterate.container;
 
+import com.codesseur.iterate.Streamed;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public interface CollectionContainer<T, C extends Collection<T>> extends Container<T, C> {
@@ -33,6 +35,20 @@ public interface CollectionContainer<T, C extends Collection<T>> extends Contain
 
   default <K> boolean notContainsBy(Function<? super T, ? extends K> extractor, K key) {
     return !containsBy(extractor, key);
+  }
+
+  default <E> E appendUnique(T value, Function<? super Streamed<T>, ? extends E> ifAppended,
+      Supplier<? extends E> ifNotAppended) {
+    return appendUnique(value, ifAppended, i -> ifNotAppended.get());
+  }
+
+  default <E> E appendUnique(T value, Function<? super Streamed<T>, ? extends E> ifAppended,
+      Function<? super Streamed<T>, ? extends E> ifNotAppended) {
+    if (contains(value)) {
+      return ifAppended.apply(append(value));
+    } else {
+      return ifNotAppended.apply(this);
+    }
   }
 
   default int size() {
