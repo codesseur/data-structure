@@ -2,7 +2,7 @@ package com.codesseur.iterate;
 
 import static com.codesseur.SafeCaster.safeCastToStream;
 import static com.codesseur.iterate.SplitMode.RIGHT;
-import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
@@ -780,7 +780,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return map(v -> Tuple.of(distance.applyAsLong(v), v))
         .filter(t -> distanceFilter.test(t._1))
         .map(t -> t.map1(Math::abs))
-        .min(naturalOrder())
+        .min(comparing(Tuple2::_1))
         .map(Tuple2::_2);
   }
 

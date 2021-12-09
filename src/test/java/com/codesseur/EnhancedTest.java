@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 public class EnhancedTest {
 
-  private Person person = new Person();
+  private Person person = new Person("bob");
 
   @Test
   public void thenMap() {

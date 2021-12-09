@@ -2,8 +2,10 @@ package com.codesseur.iterate;
 
 import static java.util.function.Function.identity;
 
+import com.codesseur.Person;
 import com.codesseur.Persons;
 import com.codesseur.Products;
+import com.codesseur.iterate.container.Sequence;
 import io.vavr.Tuple2;
 import java.util.Collections;
 import java.util.List;
@@ -397,5 +399,68 @@ public class CollectionContainerTest {
     List<List<String>> split = persons.split(3).map(Streamed::toList).toList();
 
     Assertions.assertThat(split).containsExactly(List.of("v1", " ", "v2"));
+  }
+
+  @Test
+  public void findLeftClosestExactMatch() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p2"), new Person("p3"));
+
+    Optional<Person> split = persons.findLeftClosest(p -> p.name().compareTo("p2"));
+
+    Assertions.assertThat(split).hasValue(new Person("p2"));
+  }
+
+  @Test
+  public void findRightClosestExactMatch() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p2"), new Person("p3"));
+
+    Optional<Person> split = persons.findRightClosest(p -> p.name().compareTo("p2"));
+
+    Assertions.assertThat(split).hasValue(new Person("p2"));
+  }
+
+  @Test
+  public void findLeftClosest() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p3"), new Person("p5"));
+
+    Optional<Person> split = persons.findLeftClosest(p -> p.name().compareTo("p2"));
+
+    Assertions.assertThat(split).hasValue(new Person("p1"));
+  }
+
+  @Test
+  public void findRightClosest() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p3"), new Person("p5"));
+
+    Optional<Person> split = persons.findRightClosest(p -> p.name().compareTo("p2"));
+
+    Assertions.assertThat(split).hasValue(new Person("p3"));
+  }
+
+  @Test
+  public void findRightClosestWithDuplicate() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p3"), new Person("p3"), new Person("p5"));
+
+    Optional<Person> split = persons.findRightClosest(p -> p.name().compareTo("p2"));
+
+    Assertions.assertThat(split).hasValue(new Person("p3"));
+  }
+
+  @Test
+  public void findRightClosestAfterLast() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p3"), new Person("p5"));
+
+    Optional<Person> split = persons.findRightClosest(p -> p.name().compareTo("p6"));
+
+    Assertions.assertThat(split).isEmpty();
+  }
+
+  @Test
+  public void findLeftClosestBeforeFirst() {
+    Sequence<Person> persons = Sequence.of(new Person("p1"), new Person("p3"), new Person("p5"));
+
+    Optional<Person> split = persons.findLeftClosest(p -> p.name().compareTo("p0"));
+
+    Assertions.assertThat(split).isEmpty();
   }
 }
