@@ -1,7 +1,6 @@
 language: java
 script:
-  #- mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.projectKey=codesseur_data-structure
-  - mvn clean install
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.projectKey=codesseur_data-structure
 
 after_success:
   - mvn coveralls:report
@@ -10,7 +9,7 @@ addons:
   sonarcloud:
     organization: "codesseur"
     token:
-      secure: "cDYmT0A2aIAg28PGmLRNfPA5YmJ4D6TtjWrk8rIcQ2DYoz4XI9YLZaXPnOPkTP27ILbS6UUqRiM8bE8faUQjERZ5W/b9Lmq1VbPQ83qOhj+T55O/sTY7lcusfZx/9ulwGHKmPt/vE6rS1CVaejvQHhh8uVB5YcOGHRZAJ36hTwU/JEjl69U0OhDhdeurXkzY85PwwRovo63XABNtUSrJ5J/zuE5AGMf5/I/lVNaimtMTA7zOQt8EvWsbYyhagrlLIrbRoi4a52A0WGSvy+PnRNadwMy73AgVNPkEovFkT5cvri/pp3KGYYdF6Z5y5/El78bmFnqOKh3VOBG4JTQTcLFuj0jNLg17g9emzVxeOGH/Wbhe2PIzu03HIyhNIynNveG4nwMy3h7Cde2wfEXd7bV4qCqH5/xKvfZ9QhAzR4zAJqVNiL3YtcM/27aZaABsed0YBNoPTOrjCnADVb71O8WQ4K8lRn45UJki0zKjJMz2hf7QwXciuxdt4EorvMYoPOV15K44NhgMON9B3WHxK10lSkEiUG+y3rR2LF/rebCWOu1KG52dk8UIElrQsXMAsFSVxNia0tWHlpNOTHiqp8NS1VKMoa+80T/w4lEDQXP/HWoCiO8LWhKgQ6r+eNYbySimU+QUtA7lDqCc1Qag4WP7MdCaZ7BO6Aa3/92DuTU="
+      secure: "fRbNUV/TK+ScF7wgjlXZNB3DxHpd3FgIN7bTbRZbb1Bdv8ivl5jZfr2o4bpBJwlxQuTZ2IaPqRBpnl8VaUnXL3j8yp+QB1/FnQ/5SrbYKRHXAe+imd/8Kovm+/KqdCx3QAnmL3Szs+SWf7YaYCLnKcarOs6vO9+DEEZ6E/vELqwiV9Bne6LD/5e7Q3Q1X3xrYxWq7hSjGTFqbUlo7Aowg2qFXt8S3Tb1zlWSKIsZE1FvuJgDesTA9fs9Yu0L+DGXV560CHfbcH+5N+N9Ofjt+Ckq68xBDFijGJd2DIplmGxtDBaXYaqgDkrw2hORfceBhoGBGdK3UFEX/vbU7fsjKeRGnfU7qF+CmoOtRATdWbPo+Rfvbcg8xsKlUzI6OQA4mzdKdpESlUuxUUGyuxN6oOeTBfS/jiWPNgkrH4c+1Srb8c63hMewiCZvQqiHAdnNQma7jxVD/dxITdnCLvp8aFEyyggqHHhw6x7ai5XfHigtUXtKuKyIW1+doqm0vjsDqxv6Y3+7Ag4IwG/oO5UlK/MIz0HPi7vfuYfQpGZ69iZuvIIFennH3AP2x1H4VRgWHNW7cH65mdD7WpoRFrq4pen8fplFQg0N8Y3PgV7DMPACpWU4JyJEcWydbU9ogw3MtKmlfiy7zlmuHbkZSRbLE7Nrnm7IIWr3Q+zNnh1x6zQ="
 
 cache:
   directories:

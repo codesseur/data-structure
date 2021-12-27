@@ -289,7 +289,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * calls the peek consumer if the condition is matched
+   * calls the peek consumer if the condition is matched ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream,
+   * Sequential Stream
    *
    * @param condition
    * @param peek
@@ -304,13 +305,18 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * @return the first element of the stream if present
+   * the first element of the stream if present ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
+   * Stream
+   *
+   * @return
    */
   default Optional<T> head() {
     return findFirst();
   }
 
   /**
+   * ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
+   *
    * @return the remaining elements of the stream skipping the first one
    */
   default Streamed<T> tail() {
@@ -346,7 +352,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * flatMap then pair with the original element
+   * flatMap then pair with the original element ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
+   * Stream
    *
    * @param mapper
    * @param <E>
@@ -358,7 +365,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map then pair with the original element
+   * map then pair with the original element ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
+   * Stream
    *
    * @param mapper
    * @param <E>
@@ -370,7 +378,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map using a partial function (function defined only for a certain input)
+   * map using a partial function (function defined only for a certain input) ⚠️ Support: Infinite Stream, Parallel
+   * Stream, Finit Stream, Sequential Stream
    *
    * @param mapper
    * @param <E>
@@ -381,7 +390,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map using a checked function, if an exception is thrown then call the otherwise function
+   * map using a checked function, if an exception is thrown then call the otherwise function ⚠️ Support: Infinite
+   * Stream, Parallel Stream, Finit Stream, Sequential Stream
    *
    * @param mapper
    * @param otherwise
@@ -402,7 +412,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map using a checked function, if an exception is thrown then it will be rethrown
+   * map using a checked function, if an exception is thrown then it will be rethrown ⚠️ Support: Infinite Stream,
+   * Parallel Stream, Finit Stream, Sequential Stream
    *
    * @param mapper
    * @param <E>
@@ -463,6 +474,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * map the first element of the stream using the {@code first} function,the last element of the stream using the
    * {@code last} function and the others using the {@code middle} function. If the stream contains only one element the
    * {@code mappingPriority} will determine whether to call the {@code first} function or the {@code last} function
+   * <p>
+   * ⚠️ Support: Infinite Stream, Finit Stream, Sequential Stream
    *
    * @param first
    * @param middle
@@ -668,7 +681,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * zip elements with their respective index
+   * zip elements with their respective index ⚠️ Support: Infinite Stream, Finit Stream, Sequential Stream
    */
   default Streamed<Indexed<T>> zipWithIndex() {
     return zip(Collections.emptyList(), ZipMode.UNION)
@@ -692,7 +705,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * ignore elements until
+   * ignore elements until Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
    */
   default Streamed<T> ignoreUntil(Predicate<T> start) {
     return Streamed.of(foldLeft((Supplier<ArrayList<T>>) ArrayList::new, (list, v) -> {
@@ -838,8 +851,13 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return of(stream().filter(e -> !keys.contains(by.apply(e))));
   }
 
+  /**
+   * add an element at a certain index, if index is negative or greater than the length of the stream then nothing will happen
+   * ⚠️ Support: Infinite Stream, Finit Stream,Sequential Stream
+   */
   default Streamed<T> addAt(T value, long index) {
-    return zipWithIndex().flatMap(p -> p.isAt(index) ? Stream.of(p.value(), value) : Stream.of(p.value()));
+    return index < 0 ? this
+        : zipWithIndex().flatMap(p -> p.isAt(index) ? Stream.of(p.value(), value) : Stream.of(p.value()));
   }
 
   default Streamed<T> append(T value) {
@@ -866,8 +884,13 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return Streamed.of(Streamed.of(values), this);
   }
 
-  default Streamed<Optional<T>> toOptionals() {
+  default Streamed<Optional<T>> asOptionals() {
     return map(Optional::ofNullable);
+  }
+
+  default <V> Optional<V> toOptional(Function<Streamed<T>, V> then) {
+    Streamed<T> streamed = of(this);
+    return streamed.head().map(f -> Streamed.of(Streamed.of(f), streamed)).map(then);
   }
 
   default <S extends Sequence<T>> S toSequence(Function<? super List<T>, ? extends S> factory) {
@@ -909,6 +932,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   default <K> Map<K, T> toMap(Function<? super T, ? extends K> keyExtractor) {
     return toMap(keyExtractor, Function.identity());
+  }
+
+  default <V> Map<T, V> toMap2(Function<? super T, ? extends V> valueExtractor) {
+    return toMap(Function.identity(), valueExtractor);
   }
 
   default <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyExtractor,
