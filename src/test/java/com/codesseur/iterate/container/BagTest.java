@@ -46,7 +46,7 @@ class BagTest {
 
   @Test
   void ofOptionals() {
-    Bag<String> bag = Bag.noEmptyOf(Optional.of("v1"), Optional.empty());
+    Bag<String> bag = Bag.nonEmptyOf(Optional.of("v1"), Optional.empty());
 
     Assertions.assertThat((Iterable<String>) bag).containsOnly("v1");
   }

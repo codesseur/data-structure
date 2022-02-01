@@ -23,12 +23,12 @@ import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -63,23 +63,73 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   Stream<T> stream();
 
+  /**
+   * create a Streamed from Optionals array ignoring empty elements
+   *
+   * @param values
+   * @param <T>
+   * @return
+   */
+  @SafeVarargs
+  static <T> Streamed<T> nonEmptyOf(Optional<T>... values) {
+    return of(Stream.of(values).flatMap(Optionals::stream));
+  }
+
+  /**
+   * create a Streamed from nullables array ignoring null elements
+   *
+   * @param values
+   * @param <T>
+   * @return
+   */
+  @SafeVarargs
+  static <T> Streamed<T> nonNullOf(T... values) {
+    return of(Stream.of(values).filter(Objects::nonNull));
+  }
+
+  /**
+   * create a Streamed from nullable items
+   *
+   * @param values
+   * @param <T>
+   * @return
+   */
   @SafeVarargs
   static <T> Streamed<T> of(T... values) {
     return of(Stream.of(values));
   }
 
+  /**
+   * create a Streamed from an iterator
+   *
+   * @param values
+   * @param <T>
+   * @return
+   */
   static <T> Streamed<T> of(Iterator<? extends T> values) {
-    requireNonNull(values);
-    return () -> StreamSupport.stream(spliteratorUnknownSize(values, ORDERED), false);
+    return Optional.ofNullable(values)
+        .<Streamed<T>>map(v -> () -> StreamSupport.stream(spliteratorUnknownSize(values, ORDERED), false))
+        .orElseGet(Streamed::empty);
   }
 
   static <T> Streamed<T> of(Iterable<? extends T> values) {
-    requireNonNull(values);
-    return of(StreamSupport.stream(values.spliterator(), false));
+    return Optional.ofNullable(values)
+        .<Streamed<T>>map(v -> of(StreamSupport.stream(values.spliterator(), false)))
+        .orElseGet(Streamed::empty);
+  }
+
+  static <T> Streamed<T> of(Stream<? extends T> values) {
+    return Optional.ofNullable(values)
+        .<Streamed<T>>map(v -> {
+          Stream<T> ts = Stream.of(values).flatMap(identity());
+          return () -> ts;
+        })
+        .orElseGet(Streamed::empty);
   }
 
   @SafeVarargs
   static <T> Streamed<T> of(Stream<? extends T>... values) {
+    requireNonNull(values);
     Stream<T> ts = Stream.of(values).flatMap(identity());
     return () -> ts;
   }
@@ -852,8 +902,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * add an element at a certain index, if index is negative or greater than the length of the stream then nothing will happen
-   * ⚠️ Support: Infinite Stream, Finit Stream,Sequential Stream
+   * add an element at a certain index, if index is negative or greater than the length of the stream then nothing will
+   * happen ⚠️ Support: Infinite Stream, Finit Stream,Sequential Stream
    */
   default Streamed<T> addAt(T value, long index) {
     return index < 0 ? this
@@ -861,27 +911,35 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default Streamed<T> append(T value) {
-    return append(Collections.singletonList(value));
+    return append(List.of(value));
   }
 
   default Streamed<T> append(T... values) {
-    return append(Arrays.asList(values));
+    return append(Stream.of(values));
   }
 
   default <I extends Iterable<T>> Streamed<T> append(I values) {
-    return Streamed.of(this, Streamed.of(values));
+    return append((Stream<T>) of(values));
+  }
+
+  default Streamed<T> append(Stream<T>...values) {
+    return Streamed.of(Stream.of(stream()), Stream.of(values)).flatMap(identity());
   }
 
   default Streamed<T> prepend(T value) {
-    return prepend(Collections.singletonList(value));
+    return prepend(List.of(value));
   }
 
   default Streamed<T> prepend(T... values) {
-    return prepend(Arrays.asList(values));
+    return prepend(Stream.of(values));
   }
 
   default <I extends Iterable<T>> Streamed<T> prepend(I values) {
-    return Streamed.of(Streamed.of(values), this);
+    return prepend((Stream<T>) Streamed.of(values));
+  }
+
+  default Streamed<T> prepend(Stream<T>...values) {
+    return Streamed.of(Stream.of(values), Stream.of(stream())).flatMap(identity());
   }
 
   default Streamed<Optional<T>> asOptionals() {
@@ -889,8 +947,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default <V> Optional<V> toOptional(Function<Streamed<T>, V> then) {
-    Streamed<T> streamed = of(this);
-    return streamed.head().map(f -> Streamed.of(Streamed.of(f), streamed)).map(then);
+    return head().map(f -> Streamed.of(Streamed.of(f), this)).map(then);
   }
 
   default <S extends Sequence<T>> S toSequence(Function<? super List<T>, ? extends S> factory) {
@@ -945,6 +1002,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   default <K> Dictionary<K, T> toDictionary(Function<? super T, ? extends K> keyExtractor) {
     return Dictionary.of(toMap(keyExtractor));
+  }
+
+  default <V> Dictionary<T, V> toDictionary2(Function<? super T, ? extends V> valueExtractor) {
+    return toDictionary(Function.identity(), valueExtractor);
   }
 
   default <K, V> Dictionary<K, V> toDictionary(Function<? super T, ? extends K> keyExtractor,

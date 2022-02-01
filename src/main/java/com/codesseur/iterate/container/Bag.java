@@ -1,14 +1,11 @@
 package com.codesseur.iterate.container;
 
-import com.codesseur.Optionals;
+import com.codesseur.iterate.Streamed;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import com.codesseur.iterate.Streamed;
 import java.util.stream.StreamSupport;
 
 public interface Bag<T> extends CollectionContainer<T, Set<T>> {
@@ -18,13 +15,13 @@ public interface Bag<T> extends CollectionContainer<T, Set<T>> {
   }
 
   @SafeVarargs
-  static <T> Bag<T> noEmptyOf(Optional<T>... values) {
-    return of(Stream.of(values).flatMap(Optionals::stream));
+  static <T> Bag<T> nonEmptyOf(Optional<T>... values) {
+    return Streamed.nonEmptyOf(values).toBag();
   }
 
   @SafeVarargs
   static <T> Bag<T> nonNullOf(T... values) {
-    return of(Stream.of(values).filter(Objects::nonNull));
+    return Streamed.nonNullOf(values).toBag();
   }
 
   @SafeVarargs
@@ -41,8 +38,12 @@ public interface Bag<T> extends CollectionContainer<T, Set<T>> {
     return new SimpleBag<>(StreamSupport.stream(values.spliterator(), false).collect(Collectors.toSet()));
   }
 
-  static <T> Bag<T> of(Iterator<T> values) {
-    return Streamed.of(values).toBag();
+  static <T> Bag<T> of(Iterator<? extends T> values) {
+    return Streamed.of((Iterator<T>) values).toBag();
+  }
+
+  static <T> Bag<T> of(Stream<? extends T> values) {
+    return Streamed.of((Stream<T>) values).toBag();
   }
 
   @SafeVarargs

@@ -26,7 +26,7 @@ public interface MultiValuedDictionary<K, V> extends Dictionary<K, Sequence<V>> 
   }
 
   static <K, V> MultiValuedDictionary<K, V> of(Stream<? extends Tuple2<? extends K, ? extends V>> values) {
-    final Map<K, Sequence<V>> map = values.map($.<Tuple2<K, V>>$()::cast)
+    Map<K, Sequence<V>> map = values.map($.<Tuple2<K, V>>$()::cast)
         .map(p -> p.map2(Sequence::of))
         .collect(Collectors.toMap(Tuple2::_1, Tuple2::_2, (l1, l2) -> l1.append(l2).toSequence()));
     return new SimpleMultiValuedDictionary<>(map);

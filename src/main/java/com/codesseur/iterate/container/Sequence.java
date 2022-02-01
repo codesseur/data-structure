@@ -1,18 +1,14 @@
 package com.codesseur.iterate.container;
 
-import com.codesseur.Optionals;
 import com.codesseur.iterate.Streamed;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.IntFunction;
 import java.util.function.LongFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -23,14 +19,22 @@ public interface Sequence<T> extends CollectionContainer<T, List<T>> {
     return of(Stream.empty());
   }
 
+  static Sequence<Void> repeat(long times) {
+    return repeat(i -> null, times);
+  }
+
+  static <T> Sequence<T> repeat(LongFunction<T> factory, long times) {
+    return of(LongStream.range(0, times).mapToObj(factory));
+  }
+
   @SafeVarargs
-  static <T> Sequence<T> noEmptyOf(Optional<T>... values) {
-    return of(Stream.of(values).flatMap(Optionals::stream));
+  static <T> Sequence<T> nonEmptyOf(Optional<T>... values) {
+    return Streamed.nonEmptyOf(values).toSequence();
   }
 
   @SafeVarargs
   static <T> Sequence<T> nonNullOf(T... values) {
-    return of(Stream.of(values).filter(Objects::nonNull));
+    return Streamed.nonNullOf(values).toSequence();
   }
 
   @SafeVarargs
@@ -47,8 +51,12 @@ public interface Sequence<T> extends CollectionContainer<T, List<T>> {
     return new SimpleSequence<>(StreamSupport.stream(values.spliterator(), false).collect(Collectors.toList()));
   }
 
-  static <T> Sequence<T> of(Iterator<T> values) {
-    return Streamed.of(values).toSequence();
+  static <T> Sequence<T> of(Iterator<? extends T> values) {
+    return Streamed.of((Iterator<T>) values).toSequence();
+  }
+
+  static <T> Sequence<T> of(Stream<? extends T> values) {
+    return Streamed.of((Stream<T>) values).toSequence();
   }
 
   @SafeVarargs
@@ -58,14 +66,6 @@ public interface Sequence<T> extends CollectionContainer<T, List<T>> {
 
   default Optional<T> get(long index) {
     return Optional.ofNullable(value()).filter(v -> v.size() > index).map(v -> v.get((int) index));
-  }
-
-  static Sequence<Void> repeat(long times) {
-    return repeat(i -> null, times);
-  }
-
-  static <T> Sequence<T> repeat(LongFunction<T> factory, long times) {
-    return of(LongStream.range(0, times).mapToObj(factory));
   }
 
   default Sequence<T> trim(Predicate<T> empty) {

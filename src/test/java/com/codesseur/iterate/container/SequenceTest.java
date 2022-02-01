@@ -47,7 +47,7 @@ class SequenceTest {
 
   @Test
   void ofOptionals() {
-    Sequence<String> seq = Sequence.noEmptyOf(Optional.of("v1"), Optional.empty());
+    Sequence<String> seq = Sequence.nonEmptyOf(Optional.of("v1"), Optional.empty());
 
     Assertions.assertThat((Iterable<String>) seq).containsOnly("v1");
   }

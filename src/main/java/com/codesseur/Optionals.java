@@ -20,7 +20,7 @@ public interface Optionals {
   }
 
   static <T> Stream<T> stream(Optional<? extends T> optional) {
-    return optional.map(t -> Stream.of((T) t)).orElseGet(Stream::empty);
+    return optional.stream().map(t -> (T) t);
   }
 
   static <T, E> Tuple2<T, E> mandatoryAnd(Optional<T> o1, Optional<E> o2) {
