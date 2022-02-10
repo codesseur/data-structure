@@ -17,6 +17,7 @@ import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Dictionary;
 import com.codesseur.iterate.container.Sequence;
 import com.codesseur.reflect.Type;
+import com.codesseur.reflect.Type.$;
 import io.vavr.CheckedFunction1;
 import io.vavr.PartialFunction;
 import io.vavr.Tuple;
@@ -85,6 +86,17 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   @SafeVarargs
   static <T> Streamed<T> nonNullOf(T... values) {
     return of(Stream.of(values).filter(Objects::nonNull));
+  }
+
+  /**
+   * create a Streamed from nullables iterable ignoring null elements
+   *
+   * @param values
+   * @param <T>
+   * @return
+   */
+  static <T> Streamed<T> nonNullOf(Iterable<? extends T> values) {
+    return Streamed.of(values).nonNull().safeCast($.$());
   }
 
   /**
@@ -339,12 +351,12 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * calls the peek consumer if the condition is matched ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream,
+   * calls the peek consumer if the condition is matched <br> Support: Infinite Stream, Parallel Stream, Finit Stream,
    * Sequential Stream
    *
-   * @param condition
-   * @param peek
-   * @return
+   * @param condition: a Predicate to apply to each element to determine if it should be peeked
+   * @param peek:      a Consumer to call with the element
+   * @return the new Streamed
    */
   default Streamed<T> peekIf(Predicate<T> condition, Consumer<T> peek) {
     return peek(v -> {
@@ -355,59 +367,71 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * the first element of the stream if present ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
-   * Stream
+   * return the first element of the stream if present <br> Support: Infinite Stream, Parallel Stream, Finit Stream,
+   * Sequential Stream
    *
-   * @return
+   * @return the head of the Streamed
    */
   default Optional<T> head() {
     return findFirst();
   }
 
   /**
-   * ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
+   * return the remaining elements of the stream skipping the first one <br> Support: Infinite Stream, Parallel Stream,
+   * Finit Stream, Sequential Stream
    *
-   * @return the remaining elements of the stream skipping the first one
+   * @return the tail
    */
   default Streamed<T> tail() {
     return skip(1);
   }
 
   /**
-   * @return split the stream in two head and tail
+   * return head and tail see {@link #head()} and {@link #tail()}
+   *
+   * @return split the stream in head and tail
    */
   default Tuple2<Optional<T>, Streamed<T>> headAndTail() {
-    return Tuple.of(head(), tail());
+    Iterator<T> iterator = iterator();
+    return iterator.hasNext() ?
+        Tuple.of(Optional.of(iterator.next()), Streamed.of(iterator)) : Tuple.of(Optional.empty(), Streamed.empty());
   }
 
   /**
-   * @return split the stream in two lead and last
+   * return lead and last see {@link #lead()} ()} and {@link #last()}
+   *
+   * @return split the stream in lead and last
    */
-  default Tuple2<Streamed<T>, Optional<T>> leadAndLast() {
-    return Tuple.of(lead(), last());
+  default Tuple2<Streamed<T>, Optional<T>> lastAndLead() {
+    Sequence<T> sequence = toSequence();
+    return Tuple.of(sequence.lead(), sequence.last());
   }
 
   /**
-   * @return the leading elements of the stream skipping the last one
+   * return the leading elements of the stream skipping the last one
+   *
+   * @return the lead
    */
   default Streamed<T> lead() {
     return zipWithIndex().filter(Indexed::isNotLast).map(Indexed::value);
   }
 
   /**
-   * @return the last element of the stream if present
+   * return the last element of the stream if present
+   *
+   * @return the last
    */
   default Optional<T> last() {
     return reduce((e1, e2) -> e2);
   }
 
   /**
-   * flatMap then pair with the original element ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
-   * Stream
+   * flatMap then pair with the original element <br> Support: Infinite Stream, Parallel Stream, Finit Stream,
+   * Sequential Stream
    *
-   * @param mapper
-   * @param <E>
-   * @return
+   * @param mapper: mapper to use
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<Tuple2<T, E>> flatMapSticky(Function<? super T, ? extends Stream<E>> mapper) {
     requireNonNull(mapper);
@@ -415,12 +439,12 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map then pair with the original element ⚠️ Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
+   * map then pair with the original element <br> Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
    * Stream
    *
-   * @param mapper
-   * @param <E>
-   * @return
+   * @param mapper: mapper to use
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<Tuple2<T, E>> mapSticky(Function<? super T, ? extends E> mapper) {
     requireNonNull(mapper);
@@ -428,25 +452,25 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map using a partial function (function defined only for a certain input) ⚠️ Support: Infinite Stream, Parallel
+   * map using a partial function (function defined only for a certain input) <br> Support: Infinite Stream, Parallel
    * Stream, Finit Stream, Sequential Stream
    *
-   * @param mapper
-   * @param <E>
-   * @return
+   * @param mapper: partial function
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> map(PartialFunction<? super T, ? extends E> mapper) {
     return mapPartial(v -> mapper.isDefinedAt(v) ? Optional.ofNullable(mapper.apply(v)) : Optional.empty());
   }
 
   /**
-   * map using a checked function, if an exception is thrown then call the otherwise function ⚠️ Support: Infinite
+   * map using a checked function, if an exception is thrown then call the otherwise function <br> Support: Infinite
    * Stream, Parallel Stream, Finit Stream, Sequential Stream
    *
-   * @param mapper
-   * @param otherwise
-   * @param <E>
-   * @return
+   * @param mapper:    throwing function
+   * @param otherwise: function used if exception is thrown
+   * @param <E>:       mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> mapTryOtherwise(CheckedFunction1<? super T, ? extends E> mapper,
       Function<? super Throwable, ? extends E> otherwise) {
@@ -462,11 +486,12 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * map using a checked function, if an exception is thrown then it will be rethrown ⚠️ Support: Infinite Stream,
+   * map using a checked function, if an exception is thrown then it will be rethrown <br> Support: Infinite Stream,
    * Parallel Stream, Finit Stream, Sequential Stream
    *
-   * @param mapper
-   * @param <E>
+   * @param mapper: throwing function
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> mapTry(CheckedFunction1<? super T, ? extends E> mapper) {
     requireNonNull(mapper);
@@ -476,7 +501,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * map the last element of the stream
    *
-   * @param last
+   * @param last: mapping function
+   * @return the new Streamed
    */
   default Streamed<T> mapLast(Function<? super T, ? extends T> last) {
     requireNonNull(last);
@@ -487,9 +513,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * map the last element of the stream using the {@code last} function and the others using the {@code other} function.
    * If the stream contains only one element the {@code last} function will be called
    *
-   * @param last
-   * @param other
-   * @param <E>
+   * @param last:  mapping function for the last element
+   * @param other: mapping function for the other
+   * @param <E>:   mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> mapLastOtherwise(Function<? super T, ? extends E> last,
       Function<? super T, ? extends E> other) {
@@ -501,7 +528,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * map the first element of the stream
    *
-   * @param first
+   * @param first: mapping function for the first element
+   * @return the new Streamed
    */
   default Streamed<T> mapFirst(Function<? super T, ? extends T> first) {
     return mapFirstOtherwise(first, identity());
@@ -511,9 +539,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * map the first element of the stream using the {@code first} function and the others using the {@code other}
    * function. If the stream contains only one element the {@code first} function will be called
    *
-   * @param first
-   * @param other
-   * @param <E>
+   * @param first: mapping function for the first element
+   * @param other: mapping function for the other
+   * @param <E>:   mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> mapFirstOtherwise(Function<? super T, ? extends E> first,
       Function<? super T, ? extends E> other) {
@@ -525,12 +554,13 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * {@code last} function and the others using the {@code middle} function. If the stream contains only one element the
    * {@code mappingPriority} will determine whether to call the {@code first} function or the {@code last} function
    * <p>
-   * ⚠️ Support: Infinite Stream, Finit Stream, Sequential Stream
+   * <br> Support: Infinite Stream, Finit Stream, Sequential Stream
    *
-   * @param first
-   * @param middle
-   * @param last
-   * @param <E>
+   * @param first:  mapping function for the first element
+   * @param middle: mapping function for the other
+   * @param last:   mapping function for the last element
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> map(Function<? super T, ? extends E> first,
       Function<? super T, ? extends E> middle,
@@ -542,8 +572,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * flatMap from an iterable
    *
-   * @param mapper
-   * @param <E>
+   * @param mapper: mapper function
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> flatMapIterable(Function<? super T, ? extends Iterable<E>> mapper) {
     return map(mapper).flatMap(v -> StreamSupport.stream(v.spliterator(), false));
@@ -552,8 +583,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * try to cast the elements to {@code type} ignoring those which doesn't
    *
-   * @param type
-   * @param <E>
+   * @param type: class to cast
+   * @param <E>:  mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> safeCast(Class<E> type) {
     return flatMap(v -> safeCastToStream(v, type));
@@ -562,8 +594,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * try to cast the elements to {@code type} ignoring those which doesn't
    *
-   * @param type
-   * @param <E>
+   * @param type: type to cast
+   * @param <E>:  mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> safeCast(Type<E> type) {
     return flatMap(v -> safeCastToStream(v, type));
@@ -572,18 +605,24 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * map elements ignoring empty results
    *
-   * @param mapper
-   * @param <E>
+   * @param mapper: mapper function
+   * @param <E>:    mapping type
+   * @return the new Streamed
    */
   default <E> Streamed<E> mapPartial(Function<? super T, ? extends Optional<E>> mapper) {
     return map(mapper).flatMap(Optionals::stream);
   }
 
+  default Streamed<T> nonNull() {
+    return filter(Objects::nonNull);
+  }
+
   /**
    * replace element if condition matched
    *
-   * @param condition
-   * @param value
+   * @param condition: predicate to match
+   * @param value:     replacement
+   * @return the new Streamed
    */
   default Streamed<T> replaceIf(Predicate<T> condition, T value) {
     return replaceIf(condition, i -> value);
@@ -592,8 +631,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * replace element using the {@code mapper} function if condition matched
    *
-   * @param condition
-   * @param mapper
+   * @param condition: predicate to match
+   * @param mapper:    mapping function
+   * @return the new Streamed
    */
   default Streamed<T> replaceIf(Predicate<T> condition, Function<? super T, ? extends T> mapper) {
     return replaceIfOr(condition, mapper, () -> this);
@@ -603,9 +643,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * replace element using the {@code mapper} function if {@code condition} matched or else append a new element from
    * {@code supplier}
    *
-   * @param condition
-   * @param mapper
-   * @param append
+   * @param condition: predicate to match
+   * @param mapper:    mapping function
+   * @param append:    supplier if not replaced
+   * @return the new Streamed
    */
   default Streamed<T> replaceIfOrAppend(Predicate<T> condition, Function<? super T, ? extends T> mapper,
       Supplier<? extends T> append) {
@@ -616,10 +657,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * replace element using the {@code mapper} function if {@code condition} matched or else append a stream from {@code
    * otherwise}
    *
-   * @param condition
-   * @param mapper
-   * @param otherwise
-   * @return
+   * @param condition: predicate to match
+   * @param mapper:    mapping function
+   * @param otherwise: supplier if not replaced
+   * @return the new Streamed
    */
   default Streamed<T> replaceIfOr(Predicate<T> condition, Function<? super T, ? extends T> mapper,
       Supplier<? extends Streamed<T>> otherwise) {
@@ -637,7 +678,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * remove element if condition matched
    *
-   * @param condition
+   * @param condition: predicate to match
+   * @return the new Streamed
    */
   default Streamed<T> removeIf(Predicate<T> condition) {
     return filter(condition.negate());
@@ -646,7 +688,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * remove element at a certain index
    *
-   * @param index
+   * @param index: position of the element zero based
+   * @return the new Streamed
    */
   default Streamed<T> removeAt(long index) {
     return zipWithIndex().filter(p -> p.isNotAt(index)).map(Indexed::value);
@@ -655,8 +698,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * truncate stream from offset to offset+length exclusive
    *
-   * @param offset
-   * @param length
+   * @param offset: starting position inclusive
+   * @param length: inclusion size
+   * @return the new Streamed
    */
   default Streamed<T> take(long offset, long length) {
     return skip(offset).limit(length);
@@ -665,8 +709,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * keep only distinct elements using keyExtractor resolving duplicates if exists with duplicateResolver
    *
-   * @param keyExtractor
-   * @param duplicateResolver
+   * @param keyExtractor:      function to get the distinction key
+   * @param duplicateResolver: function to resolve duplicates
+   * @return the new Streamed
    */
   default Streamed<T> distinctBy(Function<? super T, ?> keyExtractor, BinaryOperator<T> duplicateResolver) {
     return of(collect(groupingBy(keyExtractor, reducing(duplicateResolver))).values()).flatMap(Optionals::stream);
@@ -675,7 +720,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * keep only distinct elements using keyExtractor
    *
-   * @param keyExtractor
+   * @param keyExtractor: function to get the distinction key
+   * @return the new Streamed
    */
   default Streamed<T> distinctBy(Function<? super T, ?> keyExtractor) {
     Set<Object> seen = ConcurrentHashMap.newKeySet();
@@ -685,10 +731,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * zip elements with the iterable keeping only elements from both ends
    *
-   * @param second
+   * @param second: iterable
    * @param <E>
    * @param <I>
-   * @return
+   * @return the new Streamed
    */
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, E>> innerZip(I second) {
     return zip(second, ZipMode.INTERSECT)
@@ -703,6 +749,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @param second
    * @param <E>
    * @param <I>
+   * @return the new Streamed
    */
   default <E, I extends Iterable<E>> Streamed<Tuple2<Optional<T>, Optional<E>>> outerZip(I second) {
     return zip(second, ZipMode.UNION).map(Indexed::value);
@@ -714,6 +761,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @param second
    * @param <E>
    * @param <I>
+   * @return the new Streamed
    */
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, Optional<E>>> leftOuterZip(I second) {
     return zip(second, ZipMode.UNION).map(Indexed::value).mapPartial(t -> t._1().map(v -> t.map1(i -> v)));
@@ -725,13 +773,16 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @param second
    * @param <E>
    * @param <I>
+   * @return the new Streamed
    */
   default <E, I extends Iterable<E>> Streamed<Tuple2<Optional<T>, E>> rightOuterZip(I second) {
     return zip(second, ZipMode.UNION).map(Indexed::value).mapPartial(t -> t._2().map(v -> t.map2(i -> v)));
   }
 
   /**
-   * zip elements with their respective index ⚠️ Support: Infinite Stream, Finit Stream, Sequential Stream
+   * zip elements with their respective index <br> Support: Infinite Stream, Finit Stream, Sequential Stream
+   *
+   * @return the new Streamed
    */
   default Streamed<Indexed<T>> zipWithIndex() {
     return zip(Collections.emptyList(), ZipMode.UNION)
@@ -746,6 +797,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @param zipMode
    * @param <E>
    * @param <I>
+   * @return the new Streamed
    */
   default <E, I extends Iterable<E>> Streamed<Indexed<Tuple2<Optional<T>, Optional<E>>>> zip(I second,
       ZipMode zipMode) {
@@ -756,6 +808,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   /**
    * ignore elements until Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
+   *
+   * @return the new Streamed
    */
   default Streamed<T> ignoreUntil(Predicate<T> start) {
     return Streamed.of(foldLeft((Supplier<ArrayList<T>>) ArrayList::new, (list, v) -> {
@@ -769,7 +823,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * split stream by size then apply then function
+   * split stream by size then apply "then" function
+   *
+   * @return the new Streamed
    */
   default <E> Streamed<E> splitThen(int size, Function<Streamed<T>, E> then) {
     return split(size).map(then);
@@ -777,13 +833,19 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   /**
    * split stream by size
+   *
+   * @param size: number of elements on each chunk
+   * @return the new Streamed
    */
+
   default Streamed<Streamed<T>> split(int size) {
     return zipWithIndex().split(v -> v.isNotFirst() && v.indexMultipleOf(size), RIGHT).map(s -> s.map(Indexed::value));
   }
 
   /**
    * split stream based on a predicate and a split mode
+   *
+   * @return the new Streamed
    */
   default Streamed<Streamed<T>> split(Predicate<T> start, SplitMode splitMode) {
     Function<T, Optional<Either<T, T>>> junction;
@@ -803,7 +865,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * check if stream contains element
    *
-   * @param element
+   * @param element: element to match
+   * @return the result
    */
   default boolean contains(T element) {
     return contains(e -> e.equals(element));
@@ -812,33 +875,62 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   /**
    * check if stream has a matching condition
    *
-   * @param condition
+   * @param condition: predicate to match
+   * @return the result
    */
   default boolean contains(Predicate<? super T> condition) {
     return anyMatch(condition);
   }
 
   /**
+   * check if stream has an element of type
+   *
+   * @param type: type to match
+   * @return the result
+   */
+  default boolean contains(Class<? super T> type) {
+    return anyMatch(type::isInstance);
+  }
+
+  /**
    * find the first element giving a condition
    *
-   * @param condition
+   * @param condition: predicate to match
+   * @return the result
    */
   default Optional<T> find(Predicate<? super T> condition) {
     return filter(condition).findFirst();
   }
 
+  /**
+   * @param distance: distance function
+   * @return
+   */
   default Optional<T> findLeftClosest(ToLongFunction<? super T> distance) {
     return findClosest(distance, t -> t <= 0);
   }
 
+  /**
+   * @param distance
+   * @return
+   */
   default Optional<T> findRightClosest(ToLongFunction<? super T> distance) {
     return findClosest(distance, t -> t >= 0);
   }
 
+  /**
+   * @param distance
+   * @return
+   */
   default Optional<T> findClosest(ToLongFunction<? super T> distance) {
     return findClosest(distance, t -> true);
   }
 
+  /**
+   * @param distance
+   * @param distanceFilter
+   * @return
+   */
   default Optional<T> findClosest(ToLongFunction<? super T> distance, Predicate<? super Long> distanceFilter) {
     return map(v -> Tuple.of(distance.applyAsLong(v), v))
         .filter(t -> distanceFilter.test(t._1))
@@ -847,18 +939,40 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
         .map(Tuple2::_2);
   }
 
+  /**
+   * @param seed
+   * @param accumulator
+   * @param <E>
+   * @return
+   */
   default <E> E foldLeft(Supplier<E> seed, BiFunction<E, ? super T, E> accumulator) {
     return reduce(seed.get(), accumulator, (v1, v2) -> v1);
   }
 
+  /**
+   * @param accumulator
+   * @return
+   */
   default Optional<T> foldLeft(BinaryOperator<T> accumulator) {
     return reduce(accumulator);
   }
 
+  /**
+   * @param seed
+   * @param accumulator
+   * @param <E>
+   * @return
+   */
   default <E> Optional<E> foldLeft(Function<? super T, ? extends E> seed, BiFunction<E, ? super T, E> accumulator) {
     return headAndTail().apply((head, tail) -> head.map(v -> tail.foldLeft(() -> seed.apply(v), accumulator)));
   }
 
+  /**
+   * @param seed
+   * @param accumulator
+   * @param <E>
+   * @return
+   */
   default <E> E foldRight(Supplier<E> seed, BiFunction<? super T, E, E> accumulator) {
     E result = seed.get();
     final List<T> list = toList();
@@ -868,34 +982,78 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return result;
   }
 
+  /**
+   * @param accumulator
+   * @return
+   */
   default Optional<T> foldRight(BinaryOperator<T> accumulator) {
     return foldRight(identity(), accumulator);
   }
 
+  /**
+   * the
+   *
+   * @param seed
+   * @param accumulator
+   * @param <E>
+   * @return
+   */
   default <E> Optional<E> foldRight(Function<? super T, ? extends E> seed, BiFunction<? super T, E, E> accumulator) {
-    return leadAndLast().apply((lead, last) -> last.map(v -> lead.foldRight(() -> seed.apply(v), accumulator)));
+    return lastAndLead().apply((lead, last) -> last.map(v -> lead.foldRight(() -> seed.apply(v), accumulator)));
   }
 
+  /**
+   * join this Streamed with an iterable
+   *
+   * @param iterable: iterable to join with
+   * @param <TT>:     iterable element type
+   * @param <I>:      iterable type
+   * @return the joiner to further configure the joins
+   */
   default <TT, I extends Iterable<TT>> Joiner<T, TT> join(I iterable) {
     return new Joiner<>(this, Streamed.of(iterable));
   }
 
-  default <TT> Streamed<T> project(Set<TT> keys, Function<? super T, ? extends TT> extractor) {
-    return filter(e -> keys.contains(extractor.apply(e)));
-  }
-
+  /**
+   * remove an element from the Streamed
+   *
+   * @param value: the element
+   * @return the new Streamed
+   */
   default Streamed<T> remove(T value) {
     return removeBy(List.of(value), identity());
   }
 
+  /**
+   * remove an array elements from the Streamed
+   *
+   * @param value: array of elements
+   * @return the new Streamed
+   */
   default Streamed<T> remove(T... value) {
     return removeBy(List.of(value), identity());
   }
 
+  /**
+   * remove elements from the Streamed
+   *
+   * @param iterable: elements to remove
+   * @param <I>:      the Iterable type
+   * @return the new Streamed
+   */
   default <I extends Iterable<T>> Streamed<T> remove(I iterable) {
     return removeBy(iterable, identity());
   }
 
+  /**
+   * remove elements from the Streamed using the by function
+   *
+   * @param iterable: elements to remove
+   * @param by:       called on each element of the Streamed and the iterable to determine if the element must be
+   *                  removed
+   * @param <I>:      the Iterable type
+   * @return the new Streamed
+   */
   default <I extends Iterable<T>> Streamed<T> removeBy(I iterable, Function<? super T, ?> by) {
     Set<?> keys = Streamed.of(iterable).map(by).toSet();
     return of(stream().filter(e -> !keys.contains(by.apply(e))));
@@ -903,128 +1061,320 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   /**
    * add an element at a certain index, if index is negative or greater than the length of the stream then nothing will
-   * happen ⚠️ Support: Infinite Stream, Finit Stream,Sequential Stream
+   * happen <br> Support: Infinite Stream, Finit Stream,Sequential Stream
+   *
+   * @param value: the elements  to add
+   * @param index: position on the Streamed
+   * @return th new Streamed
    */
   default Streamed<T> addAt(T value, long index) {
     return index < 0 ? this
         : zipWithIndex().flatMap(p -> p.isAt(index) ? Stream.of(p.value(), value) : Stream.of(p.value()));
   }
 
+  /**
+   * add an element to the end of the Streamed
+   *
+   * @param value: the element
+   * @return the new Streamed
+   */
   default Streamed<T> append(T value) {
     return append(List.of(value));
   }
 
+  /**
+   * add an array of elements to the end of the Streamed
+   *
+   * @param values: array of element
+   * @return the new Streamed
+   */
   default Streamed<T> append(T... values) {
     return append(Stream.of(values));
   }
 
+  /**
+   * add an Iterable to the end of the Streamed
+   *
+   * @param values: the Iterable
+   * @param <I>:    the Iterable type
+   * @return the new Streamed
+   */
   default <I extends Iterable<T>> Streamed<T> append(I values) {
     return append((Stream<T>) of(values));
   }
 
-  default Streamed<T> append(Stream<T>...values) {
+  /**
+   * add an array of Stream to the end of the Streamed
+   *
+   * @param values: array of Stream
+   * @return the new Streamed
+   */
+  default Streamed<T> append(Stream<T>... values) {
     return Streamed.of(Stream.of(stream()), Stream.of(values)).flatMap(identity());
   }
 
+  /**
+   * add an element to the beginning of the Streamed
+   *
+   * @param value: the element
+   * @return the new Streamed
+   */
   default Streamed<T> prepend(T value) {
     return prepend(List.of(value));
   }
 
+  /**
+   * add an array of elements to the beginning of the Streamed
+   *
+   * @param values: array of element
+   * @return the new Streamed
+   */
   default Streamed<T> prepend(T... values) {
     return prepend(Stream.of(values));
   }
 
+  /**
+   * add an Iterable to the beginning of the Streamed
+   *
+   * @param values: the Iterable
+   * @param <I>:    the Iterable type
+   * @return the new Streamed
+   */
   default <I extends Iterable<T>> Streamed<T> prepend(I values) {
     return prepend((Stream<T>) Streamed.of(values));
   }
 
-  default Streamed<T> prepend(Stream<T>...values) {
+  /**
+   * add an array of Stream to the beginning of the Streamed
+   *
+   * @param values: array of Stream
+   * @return the new Streamed
+   */
+  default Streamed<T> prepend(Stream<T>... values) {
     return Streamed.of(Stream.of(values), Stream.of(stream())).flatMap(identity());
   }
 
+  /**
+   * wraps every element with an Optional
+   *
+   * @return the new Streamed
+   */
   default Streamed<Optional<T>> asOptionals() {
     return map(Optional::ofNullable);
   }
 
+  /**
+   * maps the Streamed if not empty
+   *
+   * @param then: called when the Streamed is empty
+   * @param <V>:  type of the result
+   * @return the collected result
+   */
   default <V> Optional<V> toOptional(Function<Streamed<T>, V> then) {
-    return head().map(f -> Streamed.of(Streamed.of(f), this)).map(then);
+    Iterator<T> iterator = iterator();
+    return iterator.hasNext() ? Optional.of(Streamed.of(iterator)).map(then) : Optional.empty();
   }
 
-  default <S extends Sequence<T>> S toSequence(Function<? super List<T>, ? extends S> factory) {
-    return collect(Collect.toSequence(factory));
+  /**
+   * collect elements into a Sequence then maps the result
+   *
+   * @param then: further maps the Sequence
+   * @param <S>:  type of the result
+   * @return the collected result
+   */
+  default <S extends Sequence<T>> S toSequence(Function<? super List<T>, ? extends S> then) {
+    return then.apply(toList());
   }
 
-  default <S extends Bag<T>> S toBag(Function<? super Set<T>, ? extends S> factory) {
-    return collect(Collect.toBag(factory));
+  /**
+   * collect elements into a Bag then maps the result
+   *
+   * @param then: further maps the Bag
+   * @param <S>:  type of the result
+   * @return the collected result
+   */
+  default <S extends Bag<T>> S toBag(Function<? super Set<T>, ? extends S> then) {
+    return then.apply(toSet());
   }
 
+  /**
+   * collect elements into a Sequence
+   *
+   * @return the collected Sequence
+   */
   default Sequence<T> toSequence() {
-    return collect(Collect.toSequence());
+    return this instanceof Sequence ? (Sequence<T>) this : collect(Collect.toSequence());
   }
 
+  /**
+   * collect elements into a Bag
+   *
+   * @return the collected Bag
+   */
   default Bag<T> toBag() {
-    return collect(Collect.toBag());
+    return this instanceof Bag ? (Bag<T>) this : collect(Collect.toBag());
   }
 
-  default <S> S toSetThen(Function<? super Set<T>, ? extends S> factory) {
-    return factory.apply(toSet());
+  /**
+   * collect elements into a Set then maps the result
+   *
+   * @param then: further maps the Set
+   * @param <S>:  type of the result
+   * @return the collected result
+   */
+  default <S> S toSetThen(Function<? super Set<T>, ? extends S> then) {
+    return then.apply(toSet());
   }
 
+  /**
+   * collect elements into a Set
+   *
+   * @return the collected Set
+   */
   default Set<T> toSet() {
-    return collect(Collectors.toSet());
+    return this instanceof Bag ? ((Bag<T>) this).value() : collect(Collectors.toSet());
   }
 
+  /**
+   * maps the Streamed if it's not empty
+   *
+   * @param factory: further maps the Streamed
+   * @param <S>:     type of the result
+   * @return the collected result
+   */
   default <S> Optional<S> ifNotEmpty(Function<? super Streamed<T>, ? extends S> factory) {
     Iterator<T> iterator = iterator();
     return iterator.hasNext() ? Optional.of(Streamed.of(iterator)).map(factory) : Optional.empty();
   }
 
-  default <S> S toListThen(Function<? super List<T>, ? extends S> factory) {
-    return factory.apply(toList());
+  /**
+   * collect elements into a List then maps the result
+   *
+   * @param then: further maps the List
+   * @param <S>:  type of the result
+   * @return the collected result
+   */
+  default <S> S toListThen(Function<? super List<T>, ? extends S> then) {
+    return then.apply(toList());
   }
 
+  /**
+   * collect elements into a List
+   *
+   * @return the collected List
+   */
   default List<T> toList() {
-    return collect(Collectors.toList());
+    return this instanceof Sequence ? ((Sequence<T>) this).value() : collect(Collectors.toList());
   }
 
+  /**
+   * collect elements into a Map using keyExtractor and elements as values. Duplicates are overridden
+   *
+   * @param keyExtractor called to get the key
+   * @param <K>:         key type
+   * @return the collected Map
+   */
   default <K> Map<K, T> toMap(Function<? super T, ? extends K> keyExtractor) {
     return toMap(keyExtractor, Function.identity());
   }
 
+  /**
+   * Collect elements into a Map using elements as keys en valueExtractor. Duplicates are overridden
+   *
+   * @param valueExtractor: called to get the value
+   * @param <V>:            value type
+   * @return the collected Map
+   */
   default <V> Map<T, V> toMap2(Function<? super T, ? extends V> valueExtractor) {
     return toMap(Function.identity(), valueExtractor);
   }
 
+  /**
+   * Collect elements into a Map using keyExtractor and valueExtractor on each element. Duplicates are overridden
+   *
+   * @param keyExtractor:   called to get the key
+   * @param valueExtractor: called to get the value
+   * @param <K>:            key type
+   * @param <V>:            value type
+   * @return the collected Map
+   */
   default <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyExtractor,
       Function<? super T, ? extends V> valueExtractor) {
     return collect(Collect.toMap(keyExtractor, valueExtractor));
   }
 
+  /**
+   * collect elements into a Dictionary using keyExtractor and elements as values. Duplicates are overridden
+   *
+   * @param keyExtractor called to get the key
+   * @param <K>:         key type
+   * @return the collected Dictionary
+   */
   default <K> Dictionary<K, T> toDictionary(Function<? super T, ? extends K> keyExtractor) {
     return Dictionary.of(toMap(keyExtractor));
   }
 
+  /**
+   * Collect elements into a Dictionary using elements as keys en valueExtractor. Duplicates are overridden
+   *
+   * @param valueExtractor: called to get the value
+   * @param <V>:            value type
+   * @return the collected Dictionary
+   */
   default <V> Dictionary<T, V> toDictionary2(Function<? super T, ? extends V> valueExtractor) {
     return toDictionary(Function.identity(), valueExtractor);
   }
 
+  /**
+   * Collect elements into a Dictionary using keyExtractor and valueExtractor on each element. Duplicates are
+   * overridden
+   *
+   * @param keyExtractor:   called to get the key
+   * @param valueExtractor: called to get the value
+   * @param <K>:            key type
+   * @param <V>:            value type
+   * @return the collected Dictionary
+   */
   default <K, V> Dictionary<K, V> toDictionary(Function<? super T, ? extends K> keyExtractor,
       Function<? super T, ? extends V> valueExtractor) {
     return Dictionary.of(toMap(keyExtractor, valueExtractor));
   }
 
+  /**
+   * Collect elements using the collector
+   *
+   * @param collector: the used collector
+   * @param <C>:       the result type
+   * @return the collected result
+   */
   default <C> C collect(Function<? super Iterable<? extends T>, ? extends C> collector) {
     return collector.apply(toList());
   }
 
+  /**
+   * groups the elements by the classifier
+   *
+   * @param classifier: called for every element to get the group key
+   * @param <K>:        type of the group key
+   * @return the resulting Dictionary
+   */
   default <K> Dictionary<K, Streamed<T>> groupBy(Function<? super T, ? extends K> classifier) {
     return groupBy(classifier, identity());
   }
 
+  /**
+   * groups the elements by the classifier then maps the resulting groups
+   *
+   * @param classifier: called for every element to get the group key
+   * @param then:       further maps the group
+   * @param <K>:        type of the group key
+   * @param <E>:        type of the resulting elements
+   * @return the resulting Dictionary
+   */
   default <K, E> Dictionary<K, E> groupBy(Function<? super T, ? extends K> classifier,
-      Function<Streamed<T>, E> mapper) {
+      Function<Streamed<T>, E> then) {
     Map<? extends K, E> collect = collect(
-        groupingBy(classifier, collectingAndThen(Collectors.toList(), l -> mapper.apply(Streamed.of(l)))));
+        groupingBy(classifier, collectingAndThen(Collectors.toList(), l -> then.apply(Streamed.of(l)))));
     return Dictionary.of(collect);
   }
 

@@ -315,7 +315,7 @@ public class CollectionContainerTest {
     Assertions.assertThat(headAndTail._1()).hasValue("v1");
     Assertions.assertThat((Stream<String>) headAndTail._2()).containsExactly("v2", "v3");
 
-    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.leadAndLast();
+    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.lastAndLead();
     Assertions.assertThat(persons.last()).hasValue("v3");
     Assertions.assertThat((Stream<String>) persons.lead()).containsExactly("v1", "v2");
     Assertions.assertThat(leadAndLAst._2()).hasValue("v3");
@@ -332,7 +332,7 @@ public class CollectionContainerTest {
     Assertions.assertThat(headAndTail._1()).isEmpty();
     Assertions.assertThat((Stream<String>) headAndTail._2()).isEmpty();
 
-    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.leadAndLast();
+    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.lastAndLead();
     Assertions.assertThat(persons.last()).isEmpty();
     Assertions.assertThat((Stream<String>) persons.lead()).isEmpty();
     Assertions.assertThat(leadAndLAst._2()).isEmpty();
@@ -349,7 +349,7 @@ public class CollectionContainerTest {
     Assertions.assertThat(headAndTail._1()).hasValue("v1");
     Assertions.assertThat((Stream<String>) headAndTail._2()).isEmpty();
 
-    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.leadAndLast();
+    Tuple2<Streamed<String>, Optional<String>> leadAndLAst = persons.lastAndLead();
     Assertions.assertThat(persons.last()).hasValue("v1");
     Assertions.assertThat((Iterable<String>) persons.lead()).isEmpty();
     Assertions.assertThat(leadAndLAst._2()).hasValue("v1");

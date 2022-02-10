@@ -1,6 +1,6 @@
 # Welcome to Data Structure
 
-[![Build Status](https://travis-ci.com/codesseur/data-structure.svg?branch=master)](https://travis-ci.com/codesseur/data-structure)
+[![Build Status](https://travis-ci.com/codesseur/data-structure.svg?branch=master)](https://travis-ci.com/github/codesseur/data-structure)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=codesseur_data-structure&metric=coverage)](https://sonarcloud.io/dashboard?id=codesseur_data-structure)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=codesseur_data-structure&metric=alert_status)](https://sonarcloud.io/dashboard?id=codesseur_data-structure)
 

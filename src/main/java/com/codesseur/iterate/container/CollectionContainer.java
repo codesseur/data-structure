@@ -37,6 +37,10 @@ public interface CollectionContainer<T, C extends Collection<T>> extends Contain
     return !containsBy(extractor, key);
   }
 
+  default Streamed<T> appendUnique(T value) {
+    return appendUnique(value, Function.identity(), Function.identity());
+  }
+
   default <E> E appendUnique(T value, Function<? super Streamed<T>, ? extends E> ifAppended,
       Supplier<? extends E> ifNotAppended) {
     return appendUnique(value, ifAppended, i -> ifNotAppended.get());

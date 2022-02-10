@@ -4,6 +4,7 @@ import static java.util.function.Function.identity;
 
 import com.codesseur.MicroType;
 import com.codesseur.iterate.Collect;
+import com.codesseur.iterate.Combiner;
 import com.codesseur.iterate.Streamed;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
@@ -17,6 +18,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
@@ -28,6 +30,11 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   @SafeVarargs
   static <K, V> Dictionary<K, V> of(Tuple2<? extends K, ? extends V>... value) {
     return of(Stream.of(value));
+  }
+
+  @SafeVarargs
+  static <K, V> Dictionary<K, V> of(Entry<? extends K, ? extends V>... value) {
+    return of(Stream.of(value).map(Tuple::fromEntry));
   }
 
   static <K, V> Dictionary<K, V> of(Map<? extends K, ? extends V> value) {
@@ -92,22 +99,24 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   }
 
   default Dictionary<K, V> replace(K key, V value) {
-    return replace(key, (k, v) -> value);
+    return replace(key, v -> value);
   }
 
-  default Dictionary<K, V> replace(K key, BiFunction<? super K, ? super V, ? extends V> mapper) {
-    return replace(key, mapper, (before, after) -> after)._1();
+  default Dictionary<K, V> replace(K key, Function<? super V, ? extends V> mapper) {
+    return replace(key, mapper, (o, v) -> null)._1;
   }
 
   default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> replace(K key, Function<? super V, ? extends V> mapper,
       BiFunction<Optional<V>, V, VV> ifReplaced) {
-    return replace(key, (k, v) -> mapper.apply(v), ifReplaced);
+    return get(key).map(v -> put(key, mapper.apply(v), ifReplaced)).orElse(Tuple.of(this, Optional.empty()));
   }
 
-  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> replace(K key,
-      BiFunction<? super K, ? super V, ? extends V> mapper,
-      BiFunction<Optional<V>, V, VV> ifReplaced) {
-    return get(key).map(v -> put(key, mapper.apply(key, v), ifReplaced)).orElse(Tuple.of(this, Optional.empty()));
+  default Dictionary<K, V> replaceIf(Predicate<V> condition, Function<? super V, ? extends V> mapper) {
+    return replaceIf((k, v) -> condition.test(v), (k, v) -> mapper.apply(v));
+  }
+
+  default Dictionary<K, V> replaceIf(BiPredicate<K, V> condition, Function<? super V, ? extends V> mapper) {
+    return replaceIf(condition, (k, v) -> mapper.apply(v));
   }
 
   default Dictionary<K, V> replaceIf(BiPredicate<K, V> condition,
@@ -118,6 +127,10 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
 
   default Dictionary<K, V> put(K key, V value) {
     return put(key, value, (o, n) -> n)._1();
+  }
+
+  default Dictionary<K, V> put(K key, Function<? super V, V> ifExistsMapper, Supplier<V> ifNotExistsSupplier) {
+    return put(key, o -> o.map(ifExistsMapper).orElseGet(ifNotExistsSupplier));
   }
 
   default Dictionary<K, V> put(K key, Function<Optional<V>, V> valueMapper) {
@@ -150,6 +163,11 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
 
   default Streamed<Entry<K, V>> stream() {
     return Streamed.of(value().entrySet().stream());
+  }
+
+  default <VV> Combiner<Entry<K, V>, Entry<K, VV>, Entry<K, V>, Entry<K, VV>, K> joinByKey(
+      Dictionary<K, VV> dictionary) {
+    return stream().join(dictionary.stream()).by(Entry::getKey, Entry::getKey);
   }
 
   default Dictionary<K, V> merge(Dictionary<K, V> dictionary) {
