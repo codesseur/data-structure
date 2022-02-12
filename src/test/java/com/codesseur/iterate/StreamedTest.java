@@ -23,6 +23,13 @@ public class StreamedTest {
   }
 
   @Test
+  void addAtOneElement() {
+    Streamed<String> streamed = Streamed.of("v1", "v2");
+
+    Assertions.assertThat((Iterable<String>) streamed.addAt("v0", 0)).containsOnly("v0", "v1", "v2");
+  }
+
+  @Test
   void appendOneElement() {
     Streamed<String> streamed = Streamed.of("v1", "v2");
 
@@ -289,5 +296,82 @@ public class StreamedTest {
     List<Tuple2<String, String>> values = Streamed.of("v1", "v2", "v3").innerZip(Streamed.of("w1", "w2")).toList();
 
     Assertions.assertThat(values).containsExactly(Tuple.of("v1", "w1"), Tuple.of("v2", "w2"));
+  }
+
+  @Test
+  void removeIfWithMatchingElement() {
+    List<String> values = Streamed.of("v1", "v2", "v3").removeIf("v2"::equals).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v3");
+  }
+
+  @Test
+  void removeIfWithNoMatch() {
+    List<String> values = Streamed.of("v1", "v2", "v3").removeIf("w2"::equals).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2", "v3");
+  }
+
+  @Test
+  void removeWithMatchingElement() {
+    List<String> values = Streamed.of("v1", "v2", "v3").remove("v2").toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v3");
+  }
+
+  @Test
+  void removeWithNoMatch() {
+    List<String> values = Streamed.of("v1", "v2", "v3").remove("w2").toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2", "v3");
+  }
+
+  @Test
+  void removeMultipleWithMatchingElement() {
+    List<String> values = Streamed.of("v1", "v2", "v3").remove("v2", "v3").toList();
+
+    Assertions.assertThat(values).containsExactly("v1");
+  }
+
+  @Test
+  void removeMultipleWithNoMatch() {
+    List<String> values = Streamed.of("v1", "v2", "v3").remove("w2", "w3").toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2", "v3");
+  }
+
+  @Test
+  void removeIterableWithMatchingElement() {
+    List<String> values = Streamed.of("v1", "v2", "v3").remove(Streamed.of("v2", "v3")).toList();
+
+    Assertions.assertThat(values).containsExactly("v1");
+  }
+
+  @Test
+  void removeIterableWithNoMatch() {
+    List<String> values = Streamed.of("v1", "v2", "v3").remove(Streamed.of("w2", "w3")).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2", "v3");
+  }
+
+  @Test
+  void removeByWithMatchingElement() {
+    List<String> values = Streamed.of("v1", "vv2", "vvv3").removeBy(Streamed.of("xxx"), String::length).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "vvv3");
+  }
+
+  @Test
+  void removeByWithNoMatch() {
+    List<String> values = Streamed.of("v1", "v2", "v3").removeBy(Streamed.of("xxx"), String::length).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2", "v3");
+  }
+
+  @Test
+  void findClosest() {
+    Optional<Integer> values = Streamed.of(1, 3, 5).findClosest(v -> 4 -v);
+
+    Assertions.assertThat(values).hasValue(3);
   }
 }
