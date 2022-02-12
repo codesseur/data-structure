@@ -4,6 +4,8 @@ import com.codesseur.iterate.container.Sequence;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +16,97 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class StreamedTest {
+
+  @Test
+  void ofWithNullArray() {
+    List<String> values = Streamed.of((String[])null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void ofWithNullStream() {
+    List<String> values = Streamed.of((Stream<String>[])null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void ofWithNullIterable() {
+    List<String> values = Streamed.of((Iterable<String>)null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void ofWithNullIterator() {
+    List<String> values = Streamed.of((Iterator<String>)null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void nonEmptyOfWithNonEmptyElements() {
+    List<String> values = Streamed.nonEmptyOf(Optional.of("v1"), Optional.of("v2")).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2");
+  }
+
+  @Test
+  void nonEmptyOfWithEmptyElement() {
+    List<String> values = Streamed.nonEmptyOf(Optional.empty(), Optional.of("v2")).toList();
+
+    Assertions.assertThat(values).containsExactly("v2");
+  }
+
+  @Test
+  void nonEmptyOfWithNull() {
+    List<String> values = Streamed.nonEmptyOf((Optional<String>[]) null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void nonNullOfWithNonNullIterable() {
+    List<String> values = Streamed.nonNullOf("v1", "v2").toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2");
+  }
+
+  @Test
+  void nonNullOfWithNullElementIterable() {
+    List<String> values = Streamed.nonNullOf(Arrays.asList(null, "v2")).toList();
+
+    Assertions.assertThat(values).containsExactly("v2");
+  }
+
+  @Test
+  void nonNullOfWithNullIterable() {
+    List<String> values = Streamed.nonNullOf((Iterable<String>) null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void nonNullOfWithNonNullElement() {
+    List<String> values = Streamed.nonNullOf("v1", "v2").toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2");
+  }
+
+  @Test
+  void nonNullOfWithNullElement() {
+    List<String> values = Streamed.nonNullOf(null, "v2").toList();
+
+    Assertions.assertThat(values).containsExactly("v2");
+  }
+
+  @Test
+  void nonNullOfWithNull() {
+    List<String> values = Streamed.nonNullOf((String)null).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
 
   @Test
   void toOptional() {
