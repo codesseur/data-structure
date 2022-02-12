@@ -5,7 +5,10 @@ import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -156,7 +159,6 @@ public class StreamedTest {
         .peekIf("v2"::equals, values::add)
         .toList();
 
-
     Assertions.assertThat(values).isEmpty();
   }
 
@@ -182,5 +184,110 @@ public class StreamedTest {
     List<Tuple2<String, String>> values = Streamed.of("v1").flatMapSticky(v -> Streamed.of(v.split(""))).toList();
 
     Assertions.assertThat(values).containsExactly(Tuple.of("v1", "v"), Tuple.of("v1", "1"));
+  }
+
+  @Test
+  void ifNotEmptyWithOneElement() {
+    Optional<Long> aLong = Streamed.of("v1").ifNotEmpty(Streamed::count);
+
+    Assertions.assertThat(aLong).hasValue(1L);
+  }
+
+  @Test
+  void ifNotEmptyWithoutElement() {
+    Optional<Long> aLong = Streamed.empty().ifNotEmpty(Streamed::count);
+
+    Assertions.assertThat(aLong).isEmpty();
+  }
+
+  @Test
+  void toListThenWithTwoElements() {
+    int size = Streamed.of("v1", "v2").toListThen(List::size);
+
+    Assertions.assertThat(size).isEqualTo(2);
+  }
+
+  @Test
+  void toSetThenWithTwoElements() {
+    int size = Streamed.of("v1", "v2").toSetThen(Set::size);
+
+    Assertions.assertThat(size).isEqualTo(2);
+  }
+
+  @Test
+  void toMapWithTwoElements() {
+    Map<String, Integer> map = Streamed.of("v1", "v2").toMap(Function.identity(), String::length);
+
+    Assertions.assertThat(map).hasSize(2).containsEntry("v1", 2).containsEntry("v2", 2);
+  }
+
+  @Test
+  void toMapFromKeyWithTwoElements() {
+    Map<String, Integer> map = Streamed.of("v1", "v2").toMap2(String::length);
+
+    Assertions.assertThat(map).hasSize(2).containsEntry("v1", 2).containsEntry("v2", 2);
+  }
+
+  @Test
+  void toMapFromValueWithTwoElements() {
+    Map<String, String> map = Streamed.of("v1", "v2").toMap(Function.identity());
+
+    Assertions.assertThat(map).hasSize(2).containsEntry("v1", "v1").containsEntry("v2", "v2");
+  }
+
+  @Test
+  void toDictionaryWithTwoElements() {
+    Map<String, Integer> map = Streamed.of("v1", "v2").toDictionary(Function.identity(), String::length).value();
+
+    Assertions.assertThat(map).hasSize(2).containsEntry("v1", 2).containsEntry("v2", 2);
+  }
+
+  @Test
+  void toDictionaryFromKeyWithTwoElements() {
+    Map<String, Integer> map = Streamed.of("v1", "v2").toDictionary2(String::length).value();
+
+    Assertions.assertThat(map).hasSize(2).containsEntry("v1", 2).containsEntry("v2", 2);
+  }
+
+  @Test
+  void toDictionaryFromValueWithTwoElements() {
+    Map<String, String> map = Streamed.of("v1", "v2").toDictionary(Function.identity()).value();
+
+    Assertions.assertThat(map).hasSize(2).containsEntry("v1", "v1").containsEntry("v2", "v2");
+  }
+
+  @Test
+  void ignoreUntilWithTwoElements() {
+    final List<String> values = Streamed.of("v1", "v2").ignoreUntil("v2"::equals).toList();
+
+    Assertions.assertThat(values).containsExactly("v2");
+  }
+
+  @Test
+  void replaceIfOrWithMatchingElement() {
+    List<String> values = Streamed.of("v1", "v2").replaceIf("v2"::equals, i -> "u" + i).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "uv2");
+  }
+
+  @Test
+  void replaceIfOrWithNoMatchingElement() {
+    final List<String> values = Streamed.of("v1", "v2").replaceIf("w2"::equals, i -> "u" + i).toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2");
+  }
+
+  @Test
+  void innerZipWithLongerRight() {
+    List<Tuple2<String, String>> values = Streamed.of("v1", "v2").innerZip(Streamed.of("w1", "w2", "w3")).toList();
+
+    Assertions.assertThat(values).containsExactly(Tuple.of("v1", "w1"), Tuple.of("v2", "w2"));
+  }
+
+  @Test
+  void innerZipWithLongerLeft() {
+    List<Tuple2<String, String>> values = Streamed.of("v1", "v2", "v3").innerZip(Streamed.of("w1", "w2")).toList();
+
+    Assertions.assertThat(values).containsExactly(Tuple.of("v1", "w1"), Tuple.of("v2", "w2"));
   }
 }

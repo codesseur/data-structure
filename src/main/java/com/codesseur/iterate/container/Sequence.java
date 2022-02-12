@@ -39,17 +39,16 @@ public interface Sequence<T> extends CollectionContainer<T, List<T>> {
 
   @SafeVarargs
   static <T> Sequence<T> of(Sequence<T>... values) {
-    return of(Stream.of(values).flatMap(Container::stream));
+    return Streamed.of(values).toSequence();
   }
 
   @SafeVarargs
   static <T> Sequence<T> of(T... values) {
-    return of(Stream.of(values));
+    return Streamed.of(values).toSequence();
   }
 
   static <T> Sequence<T> of(Iterable<? extends T> values) {
-    return new SimpleSequence<>(StreamSupport.stream(values.spliterator(), false).collect(Collectors.toList()));
-  }
+    return Streamed.of((Iterable<T> )values).toSequence(); }
 
   static <T> Sequence<T> of(Iterator<? extends T> values) {
     return Streamed.of((Iterator<T>) values).toSequence();

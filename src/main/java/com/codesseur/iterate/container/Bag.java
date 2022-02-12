@@ -4,6 +4,7 @@ import com.codesseur.iterate.Streamed;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -26,7 +27,7 @@ public interface Bag<T> extends CollectionContainer<T, Set<T>> {
 
   @SafeVarargs
   static <T> Bag<T> of(Bag<T>... values) {
-    return of(Stream.of(values).flatMap(Container::stream));
+    return Streamed.of(values).toBag();
   }
 
   @SafeVarargs
@@ -35,7 +36,7 @@ public interface Bag<T> extends CollectionContainer<T, Set<T>> {
   }
 
   static <T> Bag<T> of(Iterable<? extends T> values) {
-    return new SimpleBag<>(StreamSupport.stream(values.spliterator(), false).collect(Collectors.toSet()));
+    return Streamed.of((Iterable<T>)values).toBag();
   }
 
   static <T> Bag<T> of(Iterator<? extends T> values) {

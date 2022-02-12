@@ -73,7 +73,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    */
   @SafeVarargs
   static <T> Streamed<T> nonEmptyOf(Optional<T>... values) {
-    return of(Stream.of(values).flatMap(Optionals::stream));
+    return values == null ? Streamed.empty() : of(Stream.of(values).flatMap(Optionals::stream));
   }
 
   /**
@@ -85,7 +85,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    */
   @SafeVarargs
   static <T> Streamed<T> nonNullOf(T... values) {
-    return of(Stream.of(values).filter(Objects::nonNull));
+    return values == null ? Streamed.empty() : of(Stream.of(values).filter(Objects::nonNull));
   }
 
   /**
@@ -96,7 +96,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @return
    */
   static <T> Streamed<T> nonNullOf(Iterable<? extends T> values) {
-    return Streamed.of(values).nonNull().safeCast($.$());
+    return values == null ? Streamed.empty() : Streamed.of(values).nonNull().safeCast($.$());
   }
 
   /**
@@ -108,7 +108,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    */
   @SafeVarargs
   static <T> Streamed<T> of(T... values) {
-    return of(Stream.of(values));
+    return values == null ? Streamed.empty() : of(Stream.of(values));
   }
 
   /**
@@ -119,15 +119,12 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @return
    */
   static <T> Streamed<T> of(Iterator<? extends T> values) {
-    return Optional.ofNullable(values)
-        .<Streamed<T>>map(v -> () -> StreamSupport.stream(spliteratorUnknownSize(values, ORDERED), false))
-        .orElseGet(Streamed::empty);
+    return values == null ? Streamed.empty()
+        : () -> StreamSupport.stream(spliteratorUnknownSize(values, ORDERED), false);
   }
 
   static <T> Streamed<T> of(Iterable<? extends T> values) {
-    return Optional.ofNullable(values)
-        .<Streamed<T>>map(v -> of(StreamSupport.stream(values.spliterator(), false)))
-        .orElseGet(Streamed::empty);
+    return values == null ? Streamed.empty() : of(StreamSupport.stream(values.spliterator(), false));
   }
 
   static <T> Streamed<T> of(Stream<? extends T> values) {
@@ -141,8 +138,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   @SafeVarargs
   static <T> Streamed<T> of(Stream<? extends T>... values) {
-    requireNonNull(values);
-    Stream<T> ts = Stream.of(values).flatMap(identity());
+    Stream<T> ts = values == null ? Stream.empty() : Stream.of(values).flatMap(identity());
     return () -> ts;
   }
 
@@ -618,61 +614,14 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * replace element if condition matched
-   *
-   * @param condition: predicate to match
-   * @param value:     replacement
-   * @return the new Streamed
-   */
-  default Streamed<T> replaceIf(Predicate<T> condition, T value) {
-    return replaceIf(condition, i -> value);
-  }
-
-  /**
    * replace element using the {@code mapper} function if condition matched
    *
    * @param condition: predicate to match
-   * @param mapper:    mapping function
+   * @param replacer:    mapping function
    * @return the new Streamed
    */
-  default Streamed<T> replaceIf(Predicate<T> condition, Function<? super T, ? extends T> mapper) {
-    return replaceIfOr(condition, mapper, () -> this);
-  }
-
-  /**
-   * replace element using the {@code mapper} function if {@code condition} matched or else append a new element from
-   * {@code supplier}
-   *
-   * @param condition: predicate to match
-   * @param mapper:    mapping function
-   * @param append:    supplier if not replaced
-   * @return the new Streamed
-   */
-  default Streamed<T> replaceIfOrAppend(Predicate<T> condition, Function<? super T, ? extends T> mapper,
-      Supplier<? extends T> append) {
-    return replaceIfOr(condition, mapper, () -> append(append.get()));
-  }
-
-  /**
-   * replace element using the {@code mapper} function if {@code condition} matched or else append a stream from {@code
-   * otherwise}
-   *
-   * @param condition: predicate to match
-   * @param mapper:    mapping function
-   * @param otherwise: supplier if not replaced
-   * @return the new Streamed
-   */
-  default Streamed<T> replaceIfOr(Predicate<T> condition, Function<? super T, ? extends T> mapper,
-      Supplier<? extends Streamed<T>> otherwise) {
-    AtomicBoolean found = new AtomicBoolean(false);
-    Streamed<T> ts = map(v -> {
-      if (condition.test(v)) {
-        found.set(true);
-        return mapper.apply(v);
-      }
-      return v;
-    });
-    return found.get() ? ts : otherwise.get();
+  default Streamed<T> replaceIf(Predicate<T> condition, Function<? super T, ? extends T> replacer) {
+    return map(v -> condition.test(v) ? replacer.apply(v) : v);
   }
 
   /**
@@ -815,9 +764,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return Streamed.of(foldLeft((Supplier<ArrayList<T>>) ArrayList::new, (list, v) -> {
       if (start.test(v)) {
         list.clear();
-      } else {
-        list.add(v);
       }
+      list.add(v);
       return list;
     }));
   }

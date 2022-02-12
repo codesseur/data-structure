@@ -4,6 +4,8 @@ import static java.util.function.Function.identity;
 
 import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Sequence;
+import com.codesseur.iterate.container.SimpleBag;
+import com.codesseur.iterate.container.SimpleSequence;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
@@ -69,7 +71,7 @@ public class Collect {
   }
 
   public static <T> Collector<T, List<T>, Sequence<T>> toSequence() {
-    return toSequence(Sequence::of);
+    return toSequence(SimpleSequence::new);
   }
 
   public static <T, S extends Sequence<T>> Collector<T, List<T>, S> toSequence(
@@ -86,7 +88,7 @@ public class Collect {
   }
 
   public static <T> Collector<T, Set<T>, Bag<T>> toBag() {
-    return toBag(Bag::of);
+    return toBag(SimpleBag::new);
   }
 
   public static <T, B extends Bag<T>> Collector<T, Set<T>, B> toBag(Function<? super Set<T>, ? extends B> factory) {
