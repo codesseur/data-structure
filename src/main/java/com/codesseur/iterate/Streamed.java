@@ -138,7 +138,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   @SafeVarargs
   static <T> Streamed<T> of(Stream<? extends T>... values) {
-    Stream<T> ts = values == null ? Stream.empty() : Stream.of(values).flatMap(identity());
+    Stream<T> ts = Optional.ofNullable(values).map(s -> Stream.of(s).flatMap(identity())).orElseGet(Stream::empty);
     return () -> ts;
   }
 
