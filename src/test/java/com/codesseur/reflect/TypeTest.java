@@ -26,7 +26,8 @@ class TypeTest {
 
   @Test
   void typeVariables() {
-    Type<Animal<Cat>> type = new Type<>() {};
+    Type<Animal<Cat>> type = new Type<>() {
+    };
 
     Assertions.assertThat((Stream<Type<?>>) type.typeVariables()).containsExactly($.<Cat>$());
   }
@@ -57,8 +58,10 @@ class TypeTest {
 
   @Test
   void getIfEquals() {
-    Type<Animal<Cat>> type = new Type<>() {};
-    Type<Animal<String>> type2 = new Type<>() {};
+    Type<Animal<Cat>> type = new Type<>() {
+    };
+    Type<Animal<String>> type2 = new Type<>() {
+    };
 
     Assertions.assertThat(type.getIfEquals(type, t -> true)).hasValue(true);
     Assertions.assertThat(type2.getIfEquals(type, t -> true)).isEmpty();
@@ -66,8 +69,10 @@ class TypeTest {
 
   @Test
   void getIfSameRaw() {
-    Type<Animal<Cat>> type = new Type<>() {};
-    Type<Animal<String>> type2 = new Type<>() {};
+    Type<Animal<Cat>> type = new Type<>() {
+    };
+    Type<Animal<String>> type2 = new Type<>() {
+    };
 
     Assertions.assertThat(type.getIfSameRaw(type, t -> true)).hasValue(true);
     Assertions.assertThat(type2.getIfSameRaw(type, t -> true)).hasValue(true);

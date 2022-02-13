@@ -9,7 +9,7 @@ public class Persons implements Sequence<String> {
 
   private final List<String> values;
 
-  public Persons(String...values) {
+  public Persons(String... values) {
     this(Arrays.asList(values));
   }
 

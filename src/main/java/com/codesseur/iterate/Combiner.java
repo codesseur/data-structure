@@ -15,7 +15,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class Combiner<T1, T2,I1, I2, K> {
+public class Combiner<T1, T2, I1, I2, K> {
 
   private final Stream<T1> leftValue;
   private final Stream<T2> rightValue;
@@ -40,11 +40,13 @@ public class Combiner<T1, T2,I1, I2, K> {
   }
 
   public <II1> Combiner<T1, T2, II1, I2, K> mapLeft(Function<I1, II1> mapper) {
-    return new Combiner<>(leftValue, rightValue, leftExtractor, rightExtractor, leftMapper.andThen(mapper), rightMapper);
+    return new Combiner<>(leftValue, rightValue, leftExtractor, rightExtractor, leftMapper.andThen(mapper),
+        rightMapper);
   }
 
   public <II2> Combiner<T1, T2, I1, II2, K> mapRight(Function<I2, II2> mapper) {
-    return new Combiner<>(leftValue, rightValue, leftExtractor, rightExtractor, leftMapper, rightMapper.andThen(mapper));
+    return new Combiner<>(leftValue, rightValue, leftExtractor, rightExtractor, leftMapper,
+        rightMapper.andThen(mapper));
   }
 
   public <Z> Streamed<Z> combineAll(BiFunction<I1, I2, Z> combiner) {

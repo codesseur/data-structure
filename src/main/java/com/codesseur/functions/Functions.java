@@ -14,6 +14,7 @@ public interface Functions {
 
   /**
    * lift  a function to take optional
+   *
    * @param function
    * @param <T>
    * @param <R>

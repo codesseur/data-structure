@@ -1,9 +1,9 @@
 package com.codesseur.iterate;
 
-import com.codesseur.iterate.container.Bag;
-import com.codesseur.iterate.container.Sequence;
 import com.codesseur.Persons;
 import com.codesseur.Products;
+import com.codesseur.iterate.container.Bag;
+import com.codesseur.iterate.container.Sequence;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

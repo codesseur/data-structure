@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -61,8 +60,6 @@ import java.util.stream.StreamSupport;
  * @see java.util.stream.Stream
  */
 public interface Streamed<T> extends Stream<T>, Iterable<T> {
-
-  Stream<T> stream();
 
   /**
    * create a Streamed from Optionals array ignoring empty elements
@@ -138,13 +135,16 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   @SafeVarargs
   static <T> Streamed<T> of(Stream<? extends T>... values) {
-    Stream<T> ts = Optional.ofNullable(values).map(s -> Stream.of(s).flatMap(v -> (Stream<T>) v)).orElseGet(Stream::empty);
+    Stream<T> ts = Optional.ofNullable(values).map(s -> Stream.of(s).flatMap(v -> (Stream<T>) v))
+        .orElseGet(Stream::empty);
     return () -> ts;
   }
 
   static <T> Streamed<T> empty() {
     return of(Collections.emptyList());
   }
+
+  Stream<T> stream();
 
   @Override
   default Streamed<T> filter(Predicate<? super T> predicate) {
@@ -617,7 +617,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * replace element using the {@code mapper} function if condition matched
    *
    * @param condition: predicate to match
-   * @param replacer:    mapping function
+   * @param replacer:  mapping function
    * @return the new Streamed
    */
   default Streamed<T> replaceIf(Predicate<T> condition, Function<? super T, ? extends T> replacer) {

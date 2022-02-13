@@ -89,91 +89,91 @@ class SequenceTest {
 
   @Test
   void trimBoth() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
-    Assertions.assertThat((Stream<String>)seq.trim(s -> s.startsWith("v"))).containsOnly("w1");
+    Assertions.assertThat((Stream<String>) seq.trim(s -> s.startsWith("v"))).containsOnly("w1");
   }
 
   @Test
   void trimLeft() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
-    Assertions.assertThat((Stream<String>)seq.trimLeft(s -> s.startsWith("v"))).containsOnly("w1" ,"v1");
+    Assertions.assertThat((Stream<String>) seq.trimLeft(s -> s.startsWith("v"))).containsOnly("w1", "v1");
   }
 
   @Test
   void trimRight() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
-    Assertions.assertThat((Stream<String>)seq.trimRight(s -> s.startsWith("v"))).containsOnly("v1" ,"w1");
+    Assertions.assertThat((Stream<String>) seq.trimRight(s -> s.startsWith("v"))).containsOnly("v1", "w1");
   }
 
   @Test
   void getIndex() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.get(1)).hasValue("w1");
   }
 
   @Test
   void containsWithExisting() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.contains("v1")).isTrue();
   }
 
   @Test
   void containsWithAbsent() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.contains("t1")).isFalse();
   }
 
   @Test
   void notContainsWithExisting() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.notContains("v1")).isFalse();
   }
 
   @Test
   void notContainsWithAbsent() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.notContains("t1")).isTrue();
   }
 
   @Test
   void notContainsByWithExisting() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.notContainsBy(String::length, 2)).isFalse();
   }
 
   @Test
   void notContainsByWithAbsent() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.notContainsBy(String::length, 3)).isTrue();
   }
 
   @Test
   void containsByWithExisting() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.containsBy(String::length, 2)).isTrue();
   }
 
   @Test
   void containsByWithAbsent() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.containsBy(String::length, 3)).isFalse();
   }
 
   @Test
   void applyIfNotEmptyWithExisting() {
-    Sequence<String> seq = Sequence.of("v1", "w1","v1");
+    Sequence<String> seq = Sequence.of("v1", "w1", "v1");
 
     Assertions.assertThat(seq.applyIfNotEmpty(List::size)).hasValue(3);
   }

@@ -19,28 +19,28 @@ public class StreamedTest {
 
   @Test
   void ofWithNullArray() {
-    List<String> values = Streamed.of((String[])null).toList();
+    List<String> values = Streamed.of((String[]) null).toList();
 
     Assertions.assertThat(values).isEmpty();
   }
 
   @Test
   void ofWithNullStream() {
-    List<String> values = Streamed.of((Stream<String>[])null).toList();
+    List<String> values = Streamed.of((Stream<String>[]) null).toList();
 
     Assertions.assertThat(values).isEmpty();
   }
 
   @Test
   void ofWithNullIterable() {
-    List<String> values = Streamed.of((Iterable<String>)null).toList();
+    List<String> values = Streamed.of((Iterable<String>) null).toList();
 
     Assertions.assertThat(values).isEmpty();
   }
 
   @Test
   void ofWithNullIterator() {
-    List<String> values = Streamed.of((Iterator<String>)null).toList();
+    List<String> values = Streamed.of((Iterator<String>) null).toList();
 
     Assertions.assertThat(values).isEmpty();
   }
@@ -103,7 +103,7 @@ public class StreamedTest {
 
   @Test
   void nonNullOfWithNull() {
-    List<String> values = Streamed.nonNullOf((String)null).toList();
+    List<String> values = Streamed.nonNullOf((String) null).toList();
 
     Assertions.assertThat(values).isEmpty();
   }
@@ -463,7 +463,7 @@ public class StreamedTest {
 
   @Test
   void findClosest() {
-    Optional<Integer> values = Streamed.of(1, 3, 5).findClosest(v -> 4 -v);
+    Optional<Integer> values = Streamed.of(1, 3, 5).findClosest(v -> 4 - v);
 
     Assertions.assertThat(values).hasValue(3);
   }

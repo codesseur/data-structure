@@ -19,7 +19,8 @@ class MultiValuedDictionaryTest {
 
   @Test
   void ofTuples() {
-    MultiValuedDictionary<String, String> map = MultiValuedDictionary.of(Tuple.of("k1", "v1"), Tuple.of("k1", "v2"), Tuple.of("k2", "v2"));
+    MultiValuedDictionary<String, String> map = MultiValuedDictionary
+        .of(Tuple.of("k1", "v1"), Tuple.of("k1", "v2"), Tuple.of("k2", "v2"));
 
     Assertions.assertThat(map.value())
         .hasSize(2)
@@ -52,14 +53,16 @@ class MultiValuedDictionaryTest {
 
   @Test
   void getSingle() {
-    MultiValuedDictionary<String, String> map = MultiValuedDictionary.of(Tuple.of("k1", "v1"), Tuple.of("k1", "v2"), Tuple.of("k2", "v2"));
+    MultiValuedDictionary<String, String> map = MultiValuedDictionary
+        .of(Tuple.of("k1", "v1"), Tuple.of("k1", "v2"), Tuple.of("k2", "v2"));
 
     Assertions.assertThat(map.getSingle("k1")).hasValue("v1");
   }
 
   @Test
   void getMulti() {
-    MultiValuedDictionary<String, String> map = MultiValuedDictionary.of(Tuple.of("k1", "v1"), Tuple.of("k1", "v2"), Tuple.of("k2", "v2"));
+    MultiValuedDictionary<String, String> map = MultiValuedDictionary
+        .of(Tuple.of("k1", "v1"), Tuple.of("k1", "v2"), Tuple.of("k2", "v2"));
 
     Assertions.assertThat((Stream<String>) map.getMulti("k1")).containsExactly("v1", "v2");
   }

@@ -8,10 +8,8 @@ import java.util.ListIterator;
 import java.util.Optional;
 import java.util.function.LongFunction;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public interface Sequence<T> extends CollectionContainer<T, List<T>> {
 
@@ -48,7 +46,8 @@ public interface Sequence<T> extends CollectionContainer<T, List<T>> {
   }
 
   static <T> Sequence<T> of(Iterable<? extends T> values) {
-    return Streamed.of((Iterable<T> )values).toSequence(); }
+    return Streamed.of((Iterable<T>) values).toSequence();
+  }
 
   static <T> Sequence<T> of(Iterator<? extends T> values) {
     return Streamed.of((Iterator<T>) values).toSequence();

@@ -10,7 +10,7 @@ public class Products implements Bag<String> {
 
   private final Set<String> values;
 
-  public Products(String...values) {
+  public Products(String... values) {
     this(new HashSet<>(Arrays.asList(values)));
   }
 

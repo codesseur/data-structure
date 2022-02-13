@@ -8,14 +8,14 @@ class ProjectionsTest {
 
   @Test
   void first() {
-    BiFunction<String,Boolean,String> f = Projections.first();
+    BiFunction<String, Boolean, String> f = Projections.first();
 
     Assertions.assertThat(f.apply("v", false)).isEqualTo("v");
   }
 
   @Test
   void second() {
-    BiFunction<String,Boolean,Boolean> f = Projections.second();
+    BiFunction<String, Boolean, Boolean> f = Projections.second();
 
     Assertions.assertThat(f.apply("v", false)).isFalse();
   }

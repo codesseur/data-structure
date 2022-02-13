@@ -91,7 +91,8 @@ public class OptionalsTest {
 
   @Test
   public void combineSafeLeftOnBothPresent() {
-    Supplier<Integer> v = () -> Optionals.join(Optional.of("v1"), Optional.of("v2")).uncheck().combineLeft(String::length);
+    Supplier<Integer> v = () -> Optionals.join(Optional.of("v1"), Optional.of("v2")).uncheck()
+        .combineLeft(String::length);
 
     Assertions.assertThatThrownBy(v::get).isInstanceOf(UnmatchedCombination.class);
   }

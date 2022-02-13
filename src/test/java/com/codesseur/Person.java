@@ -3,6 +3,7 @@ package com.codesseur;
 import java.util.Objects;
 
 public class Person implements Enhanced<Person>, SafeCaster {
+
   private final String name;
 
   public Person(String name) {

@@ -37,9 +37,9 @@ class UnchecksTest {
 
   @Test
   void uncheckBiFunction() {
-    BiFunction<Boolean, Boolean, String> f = Unchecks.Func.uncheck((v1,v2) -> "" + v1 + v2);
+    BiFunction<Boolean, Boolean, String> f = Unchecks.Func.uncheck((v1, v2) -> "" + v1 + v2);
 
-    String result = f.apply(true,true);
+    String result = f.apply(true, true);
 
     Assertions.assertThat(result).isEqualTo("truetrue");
   }

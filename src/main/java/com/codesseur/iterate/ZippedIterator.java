@@ -7,11 +7,10 @@ import java.util.Optional;
 
 public class ZippedIterator<K, V> implements Iterator<Indexed<Tuple2<Optional<K>, Optional<V>>>> {
 
-  private long index = -1;
-
   private final Iterator<K> first;
   private final Iterator<V> second;
   private final ZipMode zipMode;
+  private long index = -1;
 
   public ZippedIterator(Iterator<K> first, Iterator<V> second, ZipMode zipMode) {
     this.first = first;
