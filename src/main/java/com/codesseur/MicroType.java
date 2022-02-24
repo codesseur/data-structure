@@ -30,8 +30,12 @@ public interface MicroType<T> {
     return predicate.test(value());
   }
 
-  default <M extends MicroType<T>> boolean notEquals(M value) {
+  default <M extends MicroType<T>> boolean isNotEqual(M value) {
     return !equals(value);
+  }
+
+  default <M extends MicroType<T>> boolean isEqual(M value) {
+    return equals(value);
   }
 
   default <E> Tuple2<T, E> with(E value) {

@@ -467,4 +467,5 @@ public class StreamedTest {
 
     Assertions.assertThat(values).hasValue(3);
   }
+
 }

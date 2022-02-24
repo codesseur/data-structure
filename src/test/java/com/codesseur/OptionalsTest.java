@@ -3,6 +3,7 @@ package com.codesseur;
 import com.codesseur.Optionals.SafeOptionalCombiner.UnmatchedCombination;
 import io.vavr.Tuple2;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -10,6 +11,41 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class OptionalsTest {
+
+  @Test
+  public void xorWithOneValuedOptional() {
+    Optional<String> value = Optionals.xor(Optional.empty(), Optional.of("v"));
+
+    Assertions.assertThat(value).hasValue("v");
+  }
+
+  @Test
+  public void xorWithTwoValuedOptional() {
+    Optional<String> value = Optionals.xor( Optional.of("v1"), Optional.of("v2"));
+
+    Assertions.assertThat(value).isEmpty();
+  }
+
+  @Test
+  public void xorWithEmpty() {
+    Optional<String> value = Optionals.xor(List.of());
+
+    Assertions.assertThat(value).isEmpty();
+  }
+
+  @Test
+  public void xorWithTwoSuppliedValuedOptional() {
+    Optional<String> value = Optionals.xor( () -> Optional.of("v1"), () -> Optional.of("v2"));
+
+    Assertions.assertThat(value).isEmpty();
+  }
+
+  @Test
+  public void xorWithOneSuppliedValuedOptional() {
+    Optional<String> value = Optionals.xor(Optional::empty, () -> Optional.of("v2"));
+
+    Assertions.assertThat(value).hasValue("v2");
+  }
 
   @Test
   public void streamOnEmpty() {

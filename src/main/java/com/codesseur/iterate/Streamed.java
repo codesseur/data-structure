@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 
 import com.codesseur.Optionals;
+import com.codesseur.SafeCaster;
 import com.codesseur.functions.Unchecks;
 import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Dictionary;
@@ -133,6 +134,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
         .orElseGet(Streamed::empty);
   }
 
+  static <O, T> Streamed<T> iterate(O zero, Function<O, List<T>> next, Function<T, O> offsetExtractor) {
+    return Streamed.of(new PaginationIterator<>(zero, next, offsetExtractor));
+  }
+
   @SafeVarargs
   static <T> Streamed<T> of(Stream<? extends T>... values) {
     Stream<T> ts = Optional.ofNullable(values).map(s -> Stream.of(s).flatMap(v -> (Stream<T>) v))
@@ -206,6 +211,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return of(stream().sorted(comparator));
   }
 
+  default <U extends Comparable<? super U>> Streamed<T> sorted(Function<? super T, ? extends U> keyExtractor) {
+    return sorted(comparing(keyExtractor));
+  }
+
   @Override
   default Streamed<T> peek(Consumer<? super T> action) {
     return of(stream().peek(action));
@@ -266,14 +275,34 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return stream().collect(collector);
   }
 
+  default <U extends Comparable<? super U>> Optional<T> min(Function<? super T, ? extends U> keyExtractor) {
+    return min(comparing(keyExtractor));
+  }
+
   @Override
   default Optional<T> min(Comparator<? super T> comparator) {
     return stream().min(comparator);
   }
 
+  default Optional<T> min() {
+    return stream().min(getComparator());
+  }
+
+  default <U extends Comparable<? super U>> Optional<T> max(Function<? super T, ? extends U> keyExtractor) {
+    return max(comparing(keyExtractor));
+  }
+
   @Override
   default Optional<T> max(Comparator<? super T> comparator) {
     return stream().max(comparator);
+  }
+
+  default Optional<T> max() {
+    return stream().max(getComparator());
+  }
+
+  private Comparator<T> getComparator() {
+    return (o1, o2) -> SafeCaster.safeCast(o1, $.<Comparable<T>>$()).map(v -> v.compareTo(o2)).orElse(0);
   }
 
   @Override

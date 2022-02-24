@@ -1,25 +1,20 @@
 package com.codesseur.iterate.container;
 
-import static java.util.function.Function.identity;
-
 import com.codesseur.MicroType;
 import com.codesseur.iterate.Collect;
 import com.codesseur.iterate.Combiner;
 import com.codesseur.iterate.Streamed;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Stream;
+
+import static java.util.function.Function.identity;
 
 public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
 
@@ -107,8 +102,8 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   }
 
   default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> replace(K key, Function<? super V, ? extends V> mapper,
-      BiFunction<Optional<V>, V, VV> ifReplaced) {
-    return get(key).map(v -> put(key, mapper.apply(v), ifReplaced)).orElse(Tuple.of(this, Optional.empty()));
+      BiFunction<V, V, VV> ifReplaced) {
+    return putMaybe(key, o -> o.map(mapper), (o, v) -> o.map(old -> ifReplaced.apply(old, v)).orElse(null));
   }
 
   default Dictionary<K, V> replaceIf(Predicate<V> condition, Function<? super V, ? extends V> mapper) {
@@ -126,7 +121,7 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   }
 
   default Dictionary<K, V> put(K key, V value) {
-    return put(key, value, (o, n) -> n)._1();
+    return put(key, o -> value);
   }
 
   default Dictionary<K, V> put(K key, Function<? super V, V> ifExistsMapper, Supplier<V> ifNotExistsSupplier) {
@@ -134,18 +129,20 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   }
 
   default Dictionary<K, V> put(K key, Function<Optional<V>, V> valueMapper) {
-    return put(key, valueMapper, (o, n) -> n)._1();
+    return putMaybe(key, o -> Optional.ofNullable(valueMapper.apply(o)));
   }
 
-  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> put(K key, Function<Optional<V>, V> valueMapper,
-      BiFunction<Optional<V>, V, VV> ifPut) {
-    return put(key, valueMapper.apply(get(key)), ifPut);
+  default Dictionary<K, V> putMaybe(K key, Function<? super Optional<V>, ? extends Optional<V>> valueMapper) {
+    return putMaybe(key, valueMapper, (o, n) -> null)._1;
   }
 
-  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> put(K key, V value, BiFunction<Optional<V>, V, VV> ifPut) {
-    HashMap<K, V> map = new HashMap<>(value());
-    V old = map.put(key, value);
-    return Tuple.of(new SimpleDictionary<>(map), Optional.ofNullable(ifPut.apply(Optional.ofNullable(old), value)));
+  default <VV> Tuple2<Dictionary<K, V>, Optional<VV>> putMaybe(K key, Function<? super Optional<V>, ? extends Optional<V>> valueMapper, BiFunction<? super Optional<V>, ? super V, VV> onPut) {
+    return valueMapper.apply(get(key))
+            .map(v -> {
+              HashMap<K, V> map = new HashMap<>(value());
+              V old = map.put(key, v);
+              return Tuple.of(SimpleDictionary.from(map), Optional.ofNullable(onPut.apply(Optional.ofNullable(old), v)));
+            }).orElseGet(() -> Tuple.of(this, Optional.empty()));
   }
 
   default Dictionary<K, V> filterKey(Predicate<? super K> filter) {
