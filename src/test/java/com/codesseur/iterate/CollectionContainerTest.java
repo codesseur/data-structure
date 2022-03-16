@@ -90,7 +90,120 @@ public class CollectionContainerTest {
   }
 
   @Test
-  public void join() {
+  public void joinThenCombineBoth() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineBoth((s1, s2) -> s1 + s2);
+
+    Assertions.assertThat(stream).containsOnly("bobbob");
+  }
+
+  @Test
+  public void joinThenCombineLeft() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineLeft(s -> ":" + s);
+
+    Assertions.assertThat(stream).containsOnly(":maria", ":bob");
+  }
+
+  @Test
+  public void joinThenCombineLeftOtherwise() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineLeft(s -> ":" + s, (s1, s2) -> s1 + s2);
+
+    Assertions.assertThat(stream).containsOnly(":maria", "bobbob");
+  }
+
+  @Test
+  public void joinThenCombineLeftOnly() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineLeftOnly(s -> ":" + s);
+
+    Assertions.assertThat(stream).containsOnly(":maria");
+  }
+
+  @Test
+  public void joinThenMap() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .map(l -> "@" + l, r -> "#" + r)
+        .combineBoth((s1, s2) -> s1 + s2);
+
+    Assertions.assertThat(stream).containsOnly("@bob#bob");
+  }
+
+  @Test
+  public void joinThenMapLeft() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .mapLeft(l -> "@" + l)
+        .combineBoth((s1, s2) -> s1 + s2);
+
+    Assertions.assertThat(stream).containsOnly("@bobbob");
+  }
+
+  @Test
+  public void joinThenMapRight() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .mapRight(r -> "#" + r)
+        .combineBoth((s1, s2) -> s1 + s2);
+
+    Assertions.assertThat(stream).containsOnly("bob#bob");
+  }
+
+  @Test
+  public void joinThenCombineRight() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineRight(s -> ":" + s);
+
+    Assertions.assertThat(stream).containsOnly(":jon", ":bob");
+  }
+
+  @Test
+  public void joinThenCombineRightOtherwise() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineRight((s1, s2) -> s1 + s2, s -> ":" + s);
+
+    Assertions.assertThat(stream).containsOnly(":jon", "bobbob");
+  }
+
+  @Test
+  public void joinThenCombineRightOnly() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+
+    Stream<String> stream = persons1.join(persons2).by(identity(), identity())
+        .combineRightOnly(s -> ":" + s);
+
+    Assertions.assertThat(stream).containsOnly(":jon");
+  }
+
+  @Test
+  public void joinThenCombineAll() {
     Persons persons1 = new Persons("maria", "bob");
     Persons persons2 = new Persons("maria", "bob");
 
@@ -101,7 +214,7 @@ public class CollectionContainerTest {
   }
 
   @Test
-  public void join2() {
+  public void joinThenCombine1() {
     Persons persons1 = new Persons("maria", "bob", "john");
     Persons persons2 = new Persons("maria", "bob", "alice");
 
@@ -112,7 +225,7 @@ public class CollectionContainerTest {
   }
 
   @Test
-  public void join3() {
+  public void joinThenCombine2() {
     Persons persons1 = new Persons("maria", "bob", "john");
     Persons persons2 = new Persons("maria", "bob");
 
@@ -123,7 +236,7 @@ public class CollectionContainerTest {
   }
 
   @Test
-  public void join4() {
+  public void joinThenCombine4() {
     Persons persons1 = new Persons("maria", "bob", "john");
     Persons persons2 = new Persons("maria", "bob", "alice");
 

@@ -116,10 +116,6 @@ public class Collect {
     return toMap(e -> keyExtractor.apply(e.getKey()), e -> valueExtractor.apply(e.getValue()));
   }
 
-  public static <T, KK> Collector<T, Map<KK, T>, Map<KK, T>> toMap(Function<? super T, ? extends KK> keyExtractor) {
-    return toMap(keyExtractor, identity());
-  }
-
   //See Bug https://bugs.openjdk.java.net/browse/JDK-8148463
   public static <T, KK, VV> Collector<T, Map<KK, VV>, Map<KK, VV>> toMap(
       Function<? super T, ? extends KK> keyExtractor,

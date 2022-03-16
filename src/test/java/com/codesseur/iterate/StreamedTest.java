@@ -468,4 +468,11 @@ public class StreamedTest {
     Assertions.assertThat(values).hasValue(3);
   }
 
+  @Test
+  void iterate() {
+    List<Integer> values = Streamed.iterate(0, v -> v > 3 ? List.of() : List.of(v + 1), v -> v).toList();
+
+    Assertions.assertThat(values).containsExactly(1, 2, 3, 4);
+  }
+
 }

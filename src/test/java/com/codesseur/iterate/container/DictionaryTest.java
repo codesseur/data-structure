@@ -1,11 +1,10 @@
-package com.codesseur.iterate;
+package com.codesseur.iterate.container;
 
-import com.codesseur.iterate.container.Dictionary;
-import com.codesseur.iterate.container.Sequence;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -448,6 +447,15 @@ public class DictionaryTest {
     Dictionary<String, String> result = dictionary.remove("k3");
 
     Assertions.assertThat(result.value()).containsOnly(Map.entry("k1", "v1"), Map.entry("k2", "v2"));
+  }
+
+  @Test
+  public void removeMultipleKeys() {
+    Dictionary<String, String> dictionary = Dictionary.of(Map.entry("k1", "v1"), Map.entry("k2", "v2"));
+
+    Dictionary<String, String> result = dictionary.remove(List.of("k1", "k2"));
+
+    Assertions.assertThat(result.value()).isEmpty();
   }
 
   @Test

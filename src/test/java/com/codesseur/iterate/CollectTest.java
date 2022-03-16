@@ -1,5 +1,6 @@
 package com.codesseur.iterate;
 
+import static com.codesseur.iterate.Collect.partition;
 import static com.codesseur.iterate.Collect.toSequence;
 
 import com.codesseur.Persons;
@@ -8,6 +9,7 @@ import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Sequence;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,11 +17,27 @@ import org.junit.jupiter.api.Test;
 public class CollectTest {
 
   @Test
+  public void toMapFromEntries() {
+    Map<String, String> collected = Streamed.of(Map.entry("k", "v")).collect(Collect.toMapFromEntries());
+
+    Assertions.assertThat(collected).containsEntry("k", "v");
+  }
+
+  @Test
+  public void partitionWithLeftAndRight() {
+    Streamed<Either<String, String>> values = Streamed.of(Either.left("v1"), Either.right("v2"));
+
+    Streamed<String> collected = values.collect(partition(toSequence(), toSequence(), Streamed::append));
+
+    Assertions.assertThat((Stream<String>) collected).containsExactly("v1", "v2");
+  }
+
+  @Test
   public void partitionOnlyLeft() {
     Streamed<Either<String, String>> values = Streamed.of(Either.left("v1"), Either.left("v2"));
 
     Tuple2<Sequence<String>, Sequence<String>> collected = values
-        .collect(Collect.partition(toSequence(), toSequence()));
+        .collect(partition(toSequence(), toSequence()));
 
     Assertions.assertThat((Stream<String>) collected._1).containsExactly("v1", "v2");
     Assertions.assertThat((Stream<String>) collected._2).isEmpty();
@@ -30,7 +48,7 @@ public class CollectTest {
     Streamed<Either<String, String>> values = Streamed.of(Either.right("v1"), Either.right("v2"));
 
     Tuple2<Sequence<String>, Sequence<String>> collected = values
-        .collect(Collect.partition(toSequence(), toSequence()));
+        .collect(partition(toSequence(), toSequence()));
 
     Assertions.assertThat((Stream<String>) collected._1).isEmpty();
     Assertions.assertThat((Stream<String>) collected._2).containsExactly("v1", "v2");
@@ -41,7 +59,7 @@ public class CollectTest {
     Streamed<Either<String, String>> values = Streamed.of(Either.left("v1"), Either.right("v2"));
 
     Tuple2<Sequence<String>, Sequence<String>> collected = values
-        .collect(Collect.partition(toSequence(), toSequence()));
+        .collect(partition(toSequence(), toSequence()));
 
     Assertions.assertThat((Stream<String>) collected._1).containsExactly("v1");
     Assertions.assertThat((Stream<String>) collected._2).containsExactly("v2");
@@ -52,7 +70,7 @@ public class CollectTest {
     Streamed<String> values = Streamed.of("v1", "v2");
 
     Tuple2<Sequence<String>, Sequence<String>> collected = values
-        .collect(Collect.partition(Either::left, toSequence(), toSequence()));
+        .collect(partition(Either::left, toSequence(), toSequence()));
 
     Assertions.assertThat((Stream<String>) collected._1).containsExactly("v1", "v2");
     Assertions.assertThat((Stream<String>) collected._2).isEmpty();
@@ -63,7 +81,7 @@ public class CollectTest {
     Streamed<String> values = Streamed.of("v1", "v2");
 
     Tuple2<Sequence<String>, Sequence<String>> collected = values
-        .collect(Collect.partition(Either::right, toSequence(), toSequence()));
+        .collect(partition(Either::right, toSequence(), toSequence()));
 
     Assertions.assertThat((Stream<String>) collected._1).isEmpty();
     Assertions.assertThat((Stream<String>) collected._2).containsExactly("v1", "v2");
@@ -74,7 +92,7 @@ public class CollectTest {
     Streamed<String> values = Streamed.of("v1", "v2");
 
     Tuple2<Sequence<String>, Sequence<String>> collected = values
-        .collect(Collect.partition(v -> "v1".equals(v) ? Either.left(v) : Either.right(v), toSequence(), toSequence()));
+        .collect(partition(v -> "v1".equals(v) ? Either.left(v) : Either.right(v), toSequence(), toSequence()));
 
     Assertions.assertThat((Stream<String>) collected._1).containsExactly("v1");
     Assertions.assertThat((Stream<String>) collected._2).containsExactly("v2");

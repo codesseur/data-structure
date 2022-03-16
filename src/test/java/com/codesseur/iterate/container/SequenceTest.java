@@ -185,4 +185,38 @@ class SequenceTest {
     Assertions.assertThat(seq.applyIfNotEmpty(List::size)).isEmpty();
   }
 
+  @Test
+  void equalsBetweenTwoEmpty() {
+    Assertions.assertThat(Sequence.empty().equals(Sequence.empty())).isTrue();
+  }
+
+  @Test
+  void equalsBetweenTwoEquals() {
+    Assertions.assertThat(Sequence.of("v1").equals(Sequence.of("v1"))).isTrue();
+  }
+
+  @Test
+  void equalsBetweenTwoNonEquals() {
+    Assertions.assertThat(Sequence.of("v1").equals(Sequence.of("v2"))).isFalse();
+  }
+
+  @Test
+  void size() {
+    Assertions.assertThat(Sequence.of("v1").size()).isEqualTo(1);
+  }
+
+  @Test
+  void appendUniqueWithDuplicate() {
+    List<String> values = Sequence.of("v1").appendUnique("v1").toList();
+
+    Assertions.assertThat(values).containsExactly("v1");
+  }
+
+  @Test
+  void appendUniqueWithNonDuplicate() {
+    List<String> values = Sequence.of("v1").appendUnique("v2").toList();
+
+    Assertions.assertThat(values).containsExactly("v1", "v2");
+  }
+
 }

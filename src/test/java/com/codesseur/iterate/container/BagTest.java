@@ -72,4 +72,19 @@ class BagTest {
     Assertions.assertThat(bag.toOptional()).isEmpty();
   }
 
+  @Test
+  void equalsBetweenTwoEmpty() {
+    Assertions.assertThat(Bag.empty().equals(Bag.empty())).isTrue();
+  }
+
+  @Test
+  void equalsBetweenTwoEquals() {
+    Assertions.assertThat(Bag.of("v1").equals(Bag.of("v1"))).isTrue();
+  }
+
+  @Test
+  void equalsBetweenTwoNonEquals() {
+    Assertions.assertThat(Bag.of("v1").equals(Bag.of("v2"))).isFalse();
+  }
+
 }
