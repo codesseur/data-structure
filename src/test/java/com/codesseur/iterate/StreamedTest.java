@@ -475,4 +475,39 @@ public class StreamedTest {
     Assertions.assertThat(values).containsExactly(1, 2, 3, 4);
   }
 
+  @Test
+  void min() {
+    Optional<Integer> values = Streamed.of(1, 3, 5).min();
+
+    Assertions.assertThat(values).hasValue(1);
+  }
+
+  @Test
+  void max() {
+    Optional<Integer> values = Streamed.of(1, 3, 5).max();
+
+    Assertions.assertThat(values).hasValue(5);
+  }
+
+  @Test
+  void minWithComparator() {
+    Optional<Integer> values = Streamed.of(1, 3, 5).min(v -> -v);
+
+    Assertions.assertThat(values).hasValue(5);
+  }
+
+  @Test
+  void maxWithComparator() {
+    Optional<Integer> values = Streamed.of(1, 3, 5).max(v -> -v);
+
+    Assertions.assertThat(values).hasValue(1);
+  }
+
+  @Test
+  void sortedComparing() {
+    List<Integer> values = Streamed.of(1, 3, 5).sorted(v -> -v).toList();
+
+    Assertions.assertThat(values).containsExactly(5, 3, 1);
+  }
+
 }
