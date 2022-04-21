@@ -63,7 +63,7 @@ public class MatchExtractor {
     while (matched) {
       String result = replacement.apply(match);
       resolved = resolved.substring(0, matcher.start() + diff) + result + resolved.substring(matcher.end() + diff);
-      diff = result.length() - (matcher.group().length());
+      diff += result.length() - (matcher.group().length());
       matched = matcher.find();
     }
     return resolved;

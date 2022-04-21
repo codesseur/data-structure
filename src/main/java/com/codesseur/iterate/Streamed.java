@@ -20,6 +20,11 @@ import com.codesseur.iterate.container.Sequence;
 import com.codesseur.reflect.Type;
 import com.codesseur.reflect.Type.$;
 import io.vavr.CheckedFunction1;
+import io.vavr.Function1;
+import io.vavr.Function2;
+import io.vavr.Function3;
+import io.vavr.Function4;
+import io.vavr.Function5;
 import io.vavr.PartialFunction;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
@@ -474,6 +479,16 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   default <E> Streamed<Tuple2<T, E>> mapSticky(Function<? super T, ? extends E> mapper) {
     requireNonNull(mapper);
     return map(e1 -> Tuple.of(e1, mapper.apply(e1)));
+  }
+
+  /**
+   * shift the streamed by a size
+   *
+   * @param size: the shifting size
+   * @return the new Streamed
+   */
+  default Streamed<Sequence<T>> shiftBy(int size) {
+    return Streamed.of(new ShiftIterator<>(this.iterator(), size));
   }
 
   /**
@@ -1023,6 +1038,26 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
+   * remove elements from the Streamed
+   *
+   * @param values: streamed of element
+   * @return the new Streamed
+   */
+  default Streamed<T> remove(Streamed<T> values) {
+    return remove(values.stream());
+  }
+
+  /**
+   * remove elements from the Streamed
+   *
+   * @param values: stream of element
+   * @return the new Streamed
+   */
+  default Streamed<T> remove(Stream<T> values) {
+    return removeBy(values, identity());
+  }
+
+  /**
    * remove elements from the Streamed using the by function
    *
    * @param iterable: elements to remove
@@ -1032,7 +1067,30 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @return the new Streamed
    */
   default <I extends Iterable<T>> Streamed<T> removeBy(I iterable, Function<? super T, ?> by) {
-    Set<?> keys = Streamed.of(iterable).map(by).toSet();
+    return removeBy(Streamed.of(iterable).stream(), by);
+  }
+
+  /**
+   * remove elements from the Streamed using the by function
+   *
+   * @param streamed: streamed of elements to remove
+   * @param by:       called on each element of the Streamed and the iterable to determine if the element must be
+   *                  removed
+   * @return the new Streamed
+   */
+  default Streamed<T> removeBy(Streamed<T> streamed, Function<? super T, ?> by) {
+    return removeBy(streamed.stream(), by);
+  }
+
+  /**
+   * remove elements from the Streamed using the by function
+   *
+   * @param stream: elements to remove
+   * @param by:     called on each element of the streamed and the stream to determine if the element must be removed
+   * @return the new Streamed
+   */
+  default Streamed<T> removeBy(Stream<T> stream, Function<? super T, ?> by) {
+    Set<?> keys = Streamed.of(stream).map(by).toSet();
     return of(stream().filter(e -> !keys.contains(by.apply(e))));
   }
 
@@ -1081,13 +1139,23 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * add an array of Stream to the end of the Streamed
+   * add a streamed to the end of the Streamed
    *
-   * @param values: array of Stream
+   * @param values: streamed of elements
    * @return the new Streamed
    */
-  default Streamed<T> append(Stream<T>... values) {
-    return Streamed.of(Stream.of(stream()), Stream.of(values)).flatMap(identity());
+  default Streamed<T> append(Streamed<T> values) {
+    return append(values.stream());
+  }
+
+  /**
+   * add a stream to the end of the Streamed
+   *
+   * @param values: stream of elements
+   * @return the new Streamed
+   */
+  default Streamed<T> append(Stream<T> values) {
+    return Streamed.of(stream(), values);
   }
 
   /**
@@ -1122,13 +1190,23 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * add an array of Stream to the beginning of the Streamed
+   * add a streamed to the beginning of the Streamed
    *
-   * @param values: array of Stream
+   * @param values: streamed to add
    * @return the new Streamed
    */
-  default Streamed<T> prepend(Stream<T>... values) {
-    return Streamed.of(Stream.of(values), Stream.of(stream())).flatMap(identity());
+  default Streamed<T> prepend(Streamed<T> values) {
+    return prepend(values.stream());
+  }
+
+  /**
+   * add a stream to the beginning of the Streamed
+   *
+   * @param values: stream to add
+   * @return the new Streamed
+   */
+  default Streamed<T> prepend(Stream<T> values) {
+    return Streamed.of(values, stream());
   }
 
   /**
@@ -1353,6 +1431,37 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     Map<? extends K, E> collect = collect(
         groupingBy(classifier, collectingAndThen(Collectors.toList(), l -> then.apply(Streamed.of(l)))));
     return Dictionary.of(collect);
+  }
+
+  default <E> Optional<E> project(Function1<T, E> projector) {
+    return project(1, v -> projector.apply(v.get(0)));
+  }
+
+  default <E> Optional<E> project(Function2<T, T, E> projector) {
+    return project(2, v -> projector.apply(v.get(0), v.get(1)));
+  }
+
+  default <E> Optional<E> project(Function3<T, T, T, E> projector) {
+    return project(3, v -> projector.apply(v.get(0), v.get(1), v.get(2)));
+  }
+
+  default <E> Optional<E> project(Function4<T, T, T, T, E> projector) {
+    return project(4, v -> projector.apply(v.get(0), v.get(1), v.get(2), v.get(3)));
+  }
+
+  default <E> Optional<E> project(Function5<T, T, T, T, T, E> projector) {
+    return project(5, v -> projector.apply(v.get(0), v.get(1), v.get(2), v.get(3), v.get(4)));
+  }
+
+  default <E> Optional<E> project(long limit, Function1<List<T>, E> projector) {
+    if (limit < 0)
+      throw new IllegalArgumentException("limit must be greater than 0");
+    E result = null;
+    List<T> values = limit(limit).toList();
+    if (values.size() == limit) {
+      result = projector.apply(values);
+    }
+    return Optional.ofNullable(result);
   }
 
 }

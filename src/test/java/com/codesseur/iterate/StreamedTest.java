@@ -510,4 +510,121 @@ public class StreamedTest {
     Assertions.assertThat(values).containsExactly(5, 3, 1);
   }
 
+  @Test
+  void shiftOneInEmptyStreamed() {
+    List<List<Integer>> values = Streamed.<Integer>empty().shiftBy(1).map(Streamed::toList).toList();
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void shiftOneInThreeElementsStreamed() {
+    List<List<Integer>> values = Streamed.of(1, 3, 5).shiftBy(1).map(Streamed::toList).toList();
+
+    Assertions.assertThat(values).containsExactly(
+        Arrays.asList(1),
+        Arrays.asList(3),
+        Arrays.asList(5)
+    );
+  }
+
+  @Test
+  void shiftTwoInThreeElementsStreamed() {
+    List<List<Integer>> values = Streamed.of(1, 3, 5).shiftBy(2).map(Streamed::toList).toList();
+
+    Assertions.assertThat(values).containsExactly(
+        Arrays.asList(1, 3),
+        Arrays.asList(3, 5),
+        Arrays.asList(5)
+    );
+  }
+
+  @Test
+  void shiftThreeInThreeElementsStreamed() {
+    List<List<Integer>> values = Streamed.of(1, 3, 5).shiftBy(3).map(Streamed::toList).toList();
+
+    Assertions.assertThat(values).containsExactly(
+        Arrays.asList(1, 3, 5),
+        Arrays.asList(3, 5),
+        Arrays.asList(5)
+    );
+  }
+
+  @Test
+  void projectOneOnEmpty() {
+    Optional<Integer> values = Streamed.<Integer>empty().project(v -> v);
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void projectTwoOnEmpty() {
+    Optional<Integer> values = Streamed.<Integer>empty().project((v1, v2) -> v1);
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void projectThreeOnEmpty() {
+    Optional<Integer> values = Streamed.<Integer>empty().project((v1, v2, v3) -> v1);
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void projectFourOnEmpty() {
+    Optional<Integer> values = Streamed.<Integer>empty().project((v1, v2, v3, v4) -> v1);
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void projectFiveOnEmpty() {
+    Optional<Integer> values = Streamed.<Integer>empty().project((v1, v2, v3, v4, v5) -> v1);
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
+  @Test
+  void projectOneElements() {
+    Optional<Integer> values = Streamed.of(1, 2, 3, 4, 5).project(v -> v);
+
+    Assertions.assertThat(values).hasValue(1);
+  }
+
+  @Test
+  void projectTwoOnElements() {
+    Optional<Integer> values = Streamed.of(1, 2, 3, 4, 5).project((v1, v2) -> v1 + v2);
+
+    Assertions.assertThat(values).hasValue(3);
+  }
+
+  @Test
+  void projectThreeOnElements() {
+    Optional<Integer> values = Streamed.of(1, 2, 3, 4, 5).project((v1, v2, v3) -> v1 + v2 + v3);
+
+    Assertions.assertThat(values).hasValue(6);
+  }
+
+  @Test
+  void projectFourOnElements() {
+    Optional<Integer> values = Streamed.of(1, 2, 3, 4, 5).project((v1, v2, v3, v4) -> v1 + v2 + v3 + v4);
+
+    Assertions.assertThat(values).hasValue(10);
+  }
+
+  @Test
+  void projectFiveOnElements() {
+    Optional<Integer> values = Streamed.of(1, 2, 3, 4, 5).project((v1, v2, v3, v4, v5) -> v1 + v2 + v3 + v4 + v5);
+
+    Assertions.assertThat(values).hasValue(15);
+  }
+
+  @Test
+  void projectFiveOnTwoElements() {
+    Optional<Integer> values = Streamed.of(1, 2).project((v1, v2, v3, v4, v5) -> v1);
+
+    Assertions.assertThat(values).isEmpty();
+  }
+
 }
