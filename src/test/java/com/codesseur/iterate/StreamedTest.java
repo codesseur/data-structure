@@ -512,14 +512,14 @@ public class StreamedTest {
 
   @Test
   void shiftOneInEmptyStreamed() {
-    List<List<Integer>> values = Streamed.<Integer>empty().shiftBy(1).map(Streamed::toList).toList();
+    List<List<Integer>> values = Streamed.<Integer>empty().shift(1).map(Streamed::toList).toList();
 
     Assertions.assertThat(values).isEmpty();
   }
 
   @Test
   void shiftOneInThreeElementsStreamed() {
-    List<List<Integer>> values = Streamed.of(1, 3, 5).shiftBy(1).map(Streamed::toList).toList();
+    List<List<Integer>> values = Streamed.of(1, 3, 5).shift(1).map(Streamed::toList).toList();
 
     Assertions.assertThat(values).containsExactly(
         Arrays.asList(1),
@@ -530,7 +530,7 @@ public class StreamedTest {
 
   @Test
   void shiftTwoInThreeElementsStreamed() {
-    List<List<Integer>> values = Streamed.of(1, 3, 5).shiftBy(2).map(Streamed::toList).toList();
+    List<List<Integer>> values = Streamed.of(1, 3, 5).shift(2).map(Streamed::toList).toList();
 
     Assertions.assertThat(values).containsExactly(
         Arrays.asList(1, 3),
@@ -541,7 +541,7 @@ public class StreamedTest {
 
   @Test
   void shiftThreeInThreeElementsStreamed() {
-    List<List<Integer>> values = Streamed.of(1, 3, 5).shiftBy(3).map(Streamed::toList).toList();
+    List<List<Integer>> values = Streamed.of(1, 3, 5).shift(3).map(Streamed::toList).toList();
 
     Assertions.assertThat(values).containsExactly(
         Arrays.asList(1, 3, 5),

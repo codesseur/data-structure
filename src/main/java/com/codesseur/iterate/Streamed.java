@@ -487,8 +487,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @param size: the shifting size
    * @return the new Streamed
    */
-  default Streamed<Sequence<T>> shiftBy(int size) {
-    return Streamed.of(new ShiftIterator<>(this.iterator(), size));
+  default Streamed<Sequence<T>> shift(int size) {
+    return Streamed.of(new ShiftingIterator<>(this.iterator(), size));
   }
 
   /**
@@ -800,7 +800,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * ignore elements until Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
+   * ignore elements until predicate is matched
+   * Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
    *
    * @return the new Streamed
    */
@@ -815,23 +816,14 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * split stream by size then apply "then" function
-   *
-   * @return the new Streamed
-   */
-  default <E> Streamed<E> splitThen(int size, Function<Streamed<T>, E> then) {
-    return split(size).map(then);
-  }
-
-  /**
    * split stream by size
    *
    * @param size: number of elements on each chunk
    * @return the new Streamed
    */
 
-  default Streamed<Streamed<T>> split(int size) {
-    return zipWithIndex().split(v -> v.isNotFirst() && v.indexMultipleOf(size), RIGHT).map(s -> s.map(Indexed::value));
+  default Streamed<Sequence<T>> split(int size) {
+    return split(v -> v.isNotFirst() && v.indexMultipleOf(size), RIGHT);
   }
 
   /**
@@ -839,7 +831,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    *
    * @return the new Streamed
    */
-  default Streamed<Streamed<T>> split(Predicate<T> start, SplitMode splitMode) {
+  default Streamed<Sequence<T>> split(Predicate<Indexed<T>> start, SplitMode splitMode) {
     Function<T, Optional<Either<T, T>>> junction;
     switch (splitMode) {
       case LEFT:
@@ -851,7 +843,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
       default:
         junction = v -> Optional.empty();
     }
-    return Streamed.of(new SplitIterator<>(iterator(), start, junction)).map(Streamed::of);
+    return Streamed.of(new SplittingIterator<>(iterator(), start, junction));
   }
 
   /**
@@ -880,7 +872,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @param type: type to match
    * @return the result
    */
-  default boolean contains(Class<? super T> type) {
+  default boolean contains(Class<? extends T> type) {
     return anyMatch(type::isInstance);
   }
 
@@ -1454,8 +1446,9 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   default <E> Optional<E> project(long limit, Function1<List<T>, E> projector) {
-    if (limit < 0)
+    if (limit < 0) {
       throw new IllegalArgumentException("limit must be greater than 0");
+    }
     E result = null;
     List<T> values = limit(limit).toList();
     if (values.size() == limit) {

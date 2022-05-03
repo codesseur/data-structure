@@ -1,5 +1,6 @@
 package com.codesseur.iterate;
 
+import static io.vavr.control.Try.run;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -7,11 +8,14 @@ import static java.util.stream.Collectors.toList;
 import com.codesseur.Optionals;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import io.vavr.control.Try;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -84,6 +88,27 @@ public class Combiner<T1, T2, I1, I2, K> {
   public <Z> Streamed<Z> combineRight(BiFunction<I1, I2, Z> both, Function<I2, Z> right) {
     return combine(i -> Optional.<Z>empty(), both.andThen(Optional::of), right.andThen(Optional::of))
         .flatMap(Optionals::stream);
+  }
+
+  public <Z> Streamed<Z> combineLeftOrRightOnly(Function<I1, Z> left, Function<I2, Z> right) {
+    return combine(left.andThen(Optional::of), (l, r) -> Optional.<Z>empty(), right.andThen(Optional::of))
+        .flatMap(Optionals::stream);
+  }
+
+  public void forEachBoth(BiConsumer<I1, I2> both) {
+    forEach(l -> {
+    }, both, r -> {
+    });
+  }
+
+  public void forEachLeftOrRightOnly(Consumer<I1> left, Consumer<I2> right) {
+    forEach(left, (l, r) -> {
+    }, right);
+  }
+
+  public void forEach(Consumer<I1> left, BiConsumer<I1, I2> both, Consumer<I2> right) {
+    combine(l -> run(() -> left.accept(l)), (l, r) -> run(() -> both.accept(l, r)), r -> run(() -> right.accept(r)))
+        .forEach(Try::get);
   }
 
   public <Z> Streamed<Z> combine(Function<I1, Z> left, BiFunction<I1, I2, Z> both, Function<I2, Z> right) {

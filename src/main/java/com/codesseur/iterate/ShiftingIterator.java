@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ShiftIterator<T> implements Iterator<Sequence<T>> {
+public class ShiftingIterator<T> implements Iterator<Sequence<T>> {
 
   private final Iterator<T> origin;
   private final int size;
   private List<T> values = new ArrayList<>();
 
-  public ShiftIterator(Iterator<T> origin, int size) {
+  public ShiftingIterator(Iterator<T> origin, int size) {
     if (size < 0) {
       throw new IllegalArgumentException("size must be greater than 0");
     }

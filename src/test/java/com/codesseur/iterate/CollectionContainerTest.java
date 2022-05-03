@@ -10,6 +10,7 @@ import io.vavr.Tuple2;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
@@ -249,6 +250,19 @@ public class CollectionContainerTest {
   }
 
   @Test
+  public void joinThenForEach() {
+    Persons persons1 = new Persons("maria", "bob");
+    Persons persons2 = new Persons("jon", "bob");
+    AtomicReference<String> left = new AtomicReference<>();
+    AtomicReference<String> right = new AtomicReference<>();
+    persons1.join(persons2).by(identity(), identity())
+        .forEachLeftOrRightOnly(left::set, right::set);
+
+    Assertions.assertThat(left).hasValue("maria");
+    Assertions.assertThat(right).hasValue("jon");
+  }
+
+  @Test
   public void isEmptyWithEmptyContainer() {
     Persons persons = new Persons();
 
@@ -473,7 +487,8 @@ public class CollectionContainerTest {
   public void splitWithIgnoreMode() {
     Persons persons = new Persons("v1", " ", "v2");
 
-    List<List<String>> split = persons.split(v -> v.equals(" "), SplitMode.IGNORE).map(Streamed::toList).toList();
+    List<List<String>> split = persons.split(v -> v.value().equals(" "), SplitMode.IGNORE).map(Streamed::toList)
+        .toList();
 
     Assertions.assertThat(split).containsExactly(List.of("v1"), List.of("v2"));
   }
@@ -482,7 +497,7 @@ public class CollectionContainerTest {
   public void splitWithLeftMode() {
     Persons persons = new Persons("v1", " ", "v2");
 
-    List<List<String>> split = persons.split(v -> v.equals(" "), SplitMode.LEFT).map(Streamed::toList).toList();
+    List<List<String>> split = persons.split(v -> v.value().equals(" "), SplitMode.LEFT).map(Streamed::toList).toList();
 
     Assertions.assertThat(split).containsExactly(List.of("v1", " "), List.of("v2"));
   }
@@ -491,7 +506,8 @@ public class CollectionContainerTest {
   public void splitWithRightMode() {
     Persons persons = new Persons("v1", " ", "v2");
 
-    List<List<String>> split = persons.split(v -> v.equals(" "), SplitMode.RIGHT).map(Streamed::toList).toList();
+    List<List<String>> split = persons.split(v -> v.value().equals(" "), SplitMode.RIGHT).map(Streamed::toList)
+        .toList();
 
     Assertions.assertThat(split).containsExactly(List.of("v1"), List.of(" ", "v2"));
   }
