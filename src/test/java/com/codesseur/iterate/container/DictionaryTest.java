@@ -1,5 +1,6 @@
 package com.codesseur.iterate.container;
 
+import com.codesseur.iterate.Streamed;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.Collections;
@@ -492,5 +493,29 @@ public class DictionaryTest {
     Dictionary<String, String> dictionary2 = Dictionary.of(Tuple.of("k1", "v2"));
 
     Assertions.assertThat(dictionary1).isNotEqualTo(dictionary2);
+  }
+
+  @Test
+  public void putMap() {
+    Dictionary<String, String> empty = Dictionary.empty();
+    Dictionary<String, String> result = empty.put(Map.of("k1", "v1"));
+
+    Assertions.assertThat(result.value()).containsOnly(Map.entry("k1", "v1"));
+  }
+
+  @Test
+  public void putDictionary() {
+    Dictionary<String, String> empty = Dictionary.empty();
+    Dictionary<String, String> result = empty.put(Dictionary.of(Tuple.of("k1", "v1")));
+
+    Assertions.assertThat(result.value()).containsOnly(Map.entry("k1", "v1"));
+  }
+
+  @Test
+  public void putIterable() {
+    Dictionary<String, String> empty = Dictionary.empty();
+    Dictionary<String, String> result = empty.put(s -> s, Streamed.of("k1", "k2"));
+
+    Assertions.assertThat(result.value()).containsOnly(Map.entry("k1", "k1"), Map.entry("k2", "k2"));
   }
 }

@@ -150,10 +150,24 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
       BiFunction<? super Optional<V>, ? super V, VV> onPut) {
     return valueMapper.apply(get(key))
         .map(v -> {
-          HashMap<K, V> map = new HashMap<>(value());
+          Map<K, V> map = new HashMap<>(value());
           V old = map.put(key, v);
           return Tuple.of(SimpleDictionary.from(map), Optional.ofNullable(onPut.apply(Optional.ofNullable(old), v)));
         }).orElseGet(() -> Tuple.of(this, Optional.empty()));
+  }
+
+  default Dictionary<K, V> put(Function<? super V, ? extends K> keyExtractor, Iterable<? extends V> values) {
+    return put((Map<K, V>) Streamed.of(values).toMap(keyExtractor));
+  }
+
+  default Dictionary<K, V> put(Dictionary<K, V> values) {
+    return put(values.value());
+  }
+
+  default Dictionary<K, V> put(Map<K, V> values) {
+    Map<K, V> map = new HashMap<>(value());
+    map.putAll(values);
+    return Dictionary.of(map);
   }
 
   default Dictionary<K, V> filterKey(Predicate<? super K> filter) {
@@ -203,4 +217,5 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
   default boolean isNotEmpty() {
     return !isEmpty();
   }
+
 }
