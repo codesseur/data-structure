@@ -22,6 +22,10 @@ public interface MicroType<T> {
     return value();
   }
 
+  default boolean hasNoValue(T value) {
+    return !hasValue(value);
+  }
+
   default boolean hasValue(T value) {
     return matches(v -> Objects.equals(v, value));
   }

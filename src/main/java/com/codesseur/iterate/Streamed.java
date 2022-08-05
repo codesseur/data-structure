@@ -1,6 +1,7 @@
 package com.codesseur.iterate;
 
 import static com.codesseur.SafeCaster.safeCastToStream;
+import static com.codesseur.functions.Functions.func;
 import static com.codesseur.iterate.SplitMode.RIGHT;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
@@ -29,6 +30,8 @@ import io.vavr.PartialFunction;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
+import io.vavr.control.Try;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -513,14 +516,14 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    * @return the new Streamed
    */
   default <E> Streamed<E> mapTryOtherwise(CheckedFunction1<? super T, ? extends E> mapper,
-      Function<? super Throwable, ? extends E> otherwise) {
+      BiFunction<? super T, ? super Throwable, ? extends E> otherwise) {
     requireNonNull(mapper);
     requireNonNull(otherwise);
     return map(v -> {
       try {
         return mapper.apply(v);
       } catch (Throwable t) {
-        return otherwise.apply(t);
+        return otherwise.apply(v, t);
       }
     });
   }
@@ -651,6 +654,17 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
    */
   default <E> Streamed<E> mapPartial(Function<? super T, ? extends Optional<E>> mapper) {
     return map(mapper).flatMap(Optionals::stream);
+  }
+
+  default Streamed<T> delay(Duration duration) {
+    return delay(i -> duration);
+  }
+
+  default Streamed<T> delay(Function<? super T, ? extends Duration> duration) {
+    return map(func(t -> Optional.ofNullable(duration.apply(t))
+        .filter(d -> !(d.isZero() || d.isNegative()))
+        .ifPresent(d -> Try.run(() -> Thread.sleep(d.toMillis())))
+    ));
   }
 
   default Streamed<T> nonNull() {
@@ -800,8 +814,8 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   /**
-   * ignore elements until predicate is matched
-   * Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential Stream
+   * ignore elements until predicate is matched Support: Infinite Stream, Parallel Stream, Finit Stream, Sequential
+   * Stream
    *
    * @return the new Streamed
    */
