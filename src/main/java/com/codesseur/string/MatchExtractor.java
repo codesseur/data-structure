@@ -28,8 +28,7 @@ public class MatchExtractor {
   }
 
   public Dictionary<String, Optional<String>> groups() {
-    return new MatchExtractor(Pattern.compile(GROUP_PATTERN), pattern.pattern())
-        .map(m -> m.mandatoryGroup(1))
+    return new MatchExtractor(Pattern.compile(GROUP_PATTERN), pattern.pattern()).map(m -> m.mandatoryGroup(1))
         .toDictionary2(group -> mapFirst(m -> m.group(group)).flatMap(identity()));
   }
 
@@ -75,6 +74,8 @@ public class MatchExtractor {
 
   public interface Match {
 
+    Matcher matcher();
+
     String all();
 
     default String mandatoryGroup(String group) {
@@ -112,6 +113,11 @@ public class MatchExtractor {
 
     RegexMatch(Matcher matcher) {
       this.matcher = matcher;
+    }
+
+    @Override
+    public Matcher matcher() {
+      return matcher;
     }
 
     @Override

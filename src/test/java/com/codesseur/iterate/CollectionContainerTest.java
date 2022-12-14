@@ -19,6 +19,76 @@ import org.junit.jupiter.api.Test;
 public class CollectionContainerTest {
 
   @Test
+  public void permutationsWithValues() {
+    Persons persons = new Persons("maria", "bob", "john");
+
+    List<List<String>> crossed = persons.permutations().map(Streamed::toList).toList();
+
+    Assertions.assertThat(crossed)
+        .containsExactlyInAnyOrder(
+            List.of("maria", "bob", "john"),
+            List.of("maria", "john", "bob"),
+            List.of("bob", "john", "maria"),
+            List.of("bob", "maria", "john"),
+            List.of("john", "maria", "bob"),
+            List.of("john", "bob", "maria")
+        );
+  }
+
+  @Test
+  public void permutationsWithFourValues() {
+    Persons persons = new Persons("maria", "bob", "john", "steve");
+
+    List<List<String>> crossed = persons.permutations().map(Streamed::toList).toList();
+
+    Assertions.assertThat(crossed)
+        .containsExactlyInAnyOrder(
+            List.of("maria", "bob", "john", "steve"),
+            List.of("bob", "maria", "john", "steve"),
+            List.of("john", "maria", "bob", "steve"),
+            List.of("maria", "john", "bob", "steve"),
+            List.of("bob", "john", "maria", "steve"),
+            List.of("john", "bob", "maria", "steve"),
+            List.of("steve", "bob", "maria", "john"),
+            List.of("bob", "steve", "maria", "john"),
+            List.of("maria", "steve", "bob", "john"),
+            List.of("steve", "maria", "bob", "john"),
+            List.of("bob", "maria", "steve", "john"),
+            List.of("maria", "bob", "steve", "john"),
+            List.of("maria", "john", "steve", "bob"),
+            List.of("john", "maria", "steve", "bob"),
+            List.of("steve", "maria", "john", "bob"),
+            List.of("maria", "steve", "john", "bob"),
+            List.of("john", "steve", "maria", "bob"),
+            List.of("steve", "john", "maria", "bob"),
+            List.of("steve", "john", "bob", "maria"),
+            List.of("john", "steve", "bob", "maria"),
+            List.of("bob", "steve", "john", "maria"),
+            List.of("steve", "bob", "john", "maria"),
+            List.of("john", "bob", "steve", "maria"),
+            List.of("bob", "john", "steve", "maria")
+        );
+  }
+
+  @Test
+  public void permutationsWithOneValues() {
+    Persons persons = new Persons("maria");
+
+    List<List<String>> crossed = persons.permutations().map(Streamed::toList).toList();
+
+    Assertions.assertThat(crossed).containsExactlyInAnyOrder(List.of("maria"));
+  }
+
+  @Test
+  public void permutationsWithoutValues() {
+    Persons persons = new Persons();
+
+    List<List<String>> crossed = persons.permutations().map(Streamed::toList).toList();
+
+    Assertions.assertThat(crossed).isEmpty();
+  }
+
+  @Test
   public void map() {
     Persons persons = new Persons("maria", "bob");
 

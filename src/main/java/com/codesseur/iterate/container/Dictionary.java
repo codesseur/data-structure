@@ -4,8 +4,8 @@ import static java.util.function.Function.identity;
 
 import com.codesseur.MicroType;
 import com.codesseur.iterate.Collect;
-import com.codesseur.iterate.Combiner;
 import com.codesseur.iterate.Streamed;
+import com.codesseur.iterate.join.Combiner;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.HashMap;
@@ -65,6 +65,10 @@ public interface Dictionary<K, V> extends MicroType<Map<K, V>> {
 
   default Optional<V> get(K key) {
     return Optional.ofNullable(value().get(key));
+  }
+
+  default Streamed<V> getAll(Iterable<? extends K> keys) {
+    return Streamed.of(keys).mapPartial(this::get);
   }
 
   default <KK> Dictionary<KK, V> mapKey(Function<? super K, ? extends KK> keyMapper) {

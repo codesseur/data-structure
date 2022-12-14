@@ -18,6 +18,7 @@ import com.codesseur.functions.Unchecks;
 import com.codesseur.iterate.container.Bag;
 import com.codesseur.iterate.container.Dictionary;
 import com.codesseur.iterate.container.Sequence;
+import com.codesseur.iterate.join.Joiner;
 import com.codesseur.reflect.Type;
 import com.codesseur.reflect.Type.$;
 import io.vavr.CheckedFunction1;
@@ -236,6 +237,16 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   @Override
   default Streamed<T> skip(long n) {
     return of(stream().skip(n));
+  }
+
+  @Override
+  default Streamed<T> takeWhile(Predicate<? super T> predicate) {
+    return of(stream().takeWhile(predicate));
+  }
+
+  @Override
+  default Streamed<T> dropWhile(Predicate<? super T> predicate) {
+    return of(stream().dropWhile(predicate));
   }
 
   @Override
@@ -1098,6 +1109,105 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   default Streamed<T> removeBy(Stream<T> stream, Function<? super T, ?> by) {
     Set<?> keys = Streamed.of(stream).map(by).toSet();
     return of(stream().filter(e -> !keys.contains(by.apply(e))));
+  }
+
+  /**
+   * remove elements from the Streamed using the by function
+   *
+   * @param stream: elements to remove
+   * @param by:     called on each element of the streamed and the stream to determine if the element must be removed
+   * @return the new Streamed
+   */
+  default Streamed<T> remove(Stream<T> stream, Function<? super T, ?> by) {
+    Set<?> keys = Streamed.of(stream).map(by).toSet();
+    return of(stream().filter(e -> !keys.contains(by.apply(e))));
+  }
+
+  /**
+   * remove elements from the Streamed using the predicate
+   *
+   * @param condition: applied on each element
+   * @return the new Streamed
+   */
+  default Streamed<T> remove(Predicate<T> condition) {
+    return filter(condition.negate());
+  }
+
+  /**
+   * keep an array elements from the Streamed
+   *
+   * @param value: array of elements
+   * @return the new Streamed
+   */
+  default Streamed<T> keep(T... value) {
+    return keepBy(List.of(value), identity());
+  }
+
+  /**
+   * keep elements from the Streamed
+   *
+   * @param iterable: elements to keep
+   * @param <I>:      the Iterable type
+   * @return the new Streamed
+   */
+  default <I extends Iterable<T>> Streamed<T> keep(I iterable) {
+    return keepBy(iterable, identity());
+  }
+
+  /**
+   * remove elements from the Streamed
+   *
+   * @param values: streamed of element
+   * @return the new Streamed
+   */
+  default Streamed<T> keep(Streamed<T> values) {
+    return keep(values.stream());
+  }
+
+  /**
+   * keep elements from the Streamed
+   *
+   * @param values: stream of element
+   * @return the new Streamed
+   */
+  default Streamed<T> keep(Stream<T> values) {
+    return keepBy(values, identity());
+  }
+
+  /**
+   * remove elements from the Streamed using the by function
+   *
+   * @param iterable: elements to remove
+   * @param by:       called on each element of the Streamed and the iterable to determine if the element must be
+   *                  removed
+   * @param <I>:      the Iterable type
+   * @return the new Streamed
+   */
+  default <I extends Iterable<T>> Streamed<T> keepBy(I iterable, Function<? super T, ?> by) {
+    return keepBy(Streamed.of(iterable).stream(), by);
+  }
+
+  /**
+   * keep elements from the Streamed using the by function
+   *
+   * @param streamed: streamed of elements to keep
+   * @param by:       called on each element of the Streamed and the iterable to determine if the element must be kept
+   * @return the new Streamed
+   */
+  default Streamed<T> keepBy(Streamed<T> streamed, Function<? super T, ?> by) {
+    return keepBy(streamed.stream(), by);
+  }
+
+  /**
+   * keep elements from the Streamed using the by function
+   *
+   * @param stream: elements to keep
+   * @param by:     called on each element of the streamed and the stream to determine if the element must be kept
+   * @return the new Streamed
+   */
+  default Streamed<T> keepBy(Stream<T> stream, Function<? super T, ?> by) {
+    Set<?> keys = Streamed.of(stream).map(by).toSet();
+    return of(stream().filter(e -> keys.contains(by.apply(e))));
   }
 
   /**

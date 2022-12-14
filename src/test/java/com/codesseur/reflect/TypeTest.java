@@ -1,6 +1,7 @@
 package com.codesseur.reflect;
 
 import com.codesseur.reflect.Type.$;
+import java.util.List;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

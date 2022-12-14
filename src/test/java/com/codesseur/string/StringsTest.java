@@ -1,10 +1,8 @@
 package com.codesseur.string;
 
-import com.codesseur.iterate.Streamed;
 import com.codesseur.iterate.container.Dictionary;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

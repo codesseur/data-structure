@@ -1,5 +1,6 @@
 package com.codesseur.iterate.container;
 
+import com.codesseur.iterate.PermutationIterator;
 import com.codesseur.iterate.Streamed;
 import java.util.Collection;
 import java.util.Optional;
@@ -62,6 +63,17 @@ public interface CollectionContainer<T, C extends Collection<T>> extends Contain
   @Override
   default long count() {
     return value().size();
+  }
+
+  default Streamed<Sequence<T>> permutations() {
+    if (isEmpty()) {
+      return Streamed.empty();
+    } else if (size() == 1) {
+      return Streamed.<Sequence<T>>of(toSequence());
+    } else {
+      Sequence<T> first = toSequence();
+      return Streamed.of(new PermutationIterator<>(first)).prepend(first);
+    }
   }
 
   default <E> Optional<E> applyIfNotEmpty(Function<? super C, ? extends E> mapper) {
