@@ -83,6 +83,10 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
     return values == null ? Streamed.empty() : of(Stream.of(values).flatMap(Optionals::stream));
   }
 
+  static <T> Streamed<T> nonEmptyOf(Iterable<Optional<? extends T>> values) {
+    return values == null ? Streamed.empty() : of(values).mapPartial(v -> v).safeCast($.$());
+  }
+
   /**
    * create a Streamed from nullables array ignoring null elements
    *
@@ -143,8 +147,16 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
         .orElseGet(Streamed::empty);
   }
 
-  static <O, T> Streamed<T> iterate(O zero, Function<O, List<T>> next, Function<T, O> offsetExtractor) {
-    return Streamed.of(new PaginationIterator<>(zero, next, offsetExtractor));
+  static <O, T> Streamed<T> paginate(O zero, Function<O, List<T>> nextPage, Function<T, O> offsetExtractor) {
+    return Streamed.of(new PaginationIterator<>(zero, nextPage, offsetExtractor));
+  }
+
+  static <T> Streamed<T> iterate(T zero, Function<Indexed<T>, Optional<T>> next) {
+    return iterate(zero, v -> true, next);
+  }
+
+  static <T> Streamed<T> iterate(T zero, Predicate<Indexed<T>> filter, Function<Indexed<T>, Optional<T>> next) {
+    return Streamed.of(new RecurrentIterator<>(zero, next, filter));
   }
 
   @SafeVarargs
@@ -757,7 +769,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   default <E, I extends Iterable<E>> Streamed<Tuple2<T, E>> innerZip(I second) {
     return zip(second, ZipMode.INTERSECT)
         .map(Indexed::value)
-        .map(p -> p.apply(Optionals::and))
+        .map(p -> p.apply(Optionals::and).apply(Tuple::of))
         .flatMap(Optionals::stream);
   }
 

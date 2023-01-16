@@ -33,9 +33,16 @@ public class ObjectPicker {
       return this.value.map(condition::test).orElse(true) ? Optional.of(Nothing.NOTHING) : Optional.empty();
     }
 
+    public Optional<T> peek(Consumer<T> consumer) {
+      return this.value.map(v -> {
+        consumer.accept(v);
+        return v;
+      });
+    }
+
   }
 
-  public static class Pick<T> {
+  public static class Pick<T> implements MicroType<T> {
 
     private final T value;
 
@@ -60,5 +67,9 @@ public class ObjectPicker {
       return value;
     }
 
+    @Override
+    public T value() {
+      return value;
+    }
   }
 }

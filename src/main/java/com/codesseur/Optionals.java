@@ -1,8 +1,16 @@
 package com.codesseur;
 
+import com.codesseur.AndCombiner.AndCombiner2;
+import com.codesseur.AndCombiner.AndCombiner3;
+import com.codesseur.AndCombiner.AndCombiner4;
+import com.codesseur.AndCombiner.AndCombiner5;
+import com.codesseur.AndCombiner.AndCombiner6;
+import com.codesseur.AndCombiner.AndCombiner7;
+import com.codesseur.AndCombiner.AndCombiner8;
 import com.codesseur.iterate.Streamed;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import io.vavr.Tuple3;
 import io.vavr.control.Either;
 import java.util.Arrays;
 import java.util.List;
@@ -23,13 +31,32 @@ public interface Optionals {
     return optional.stream().map(t -> (T) t);
   }
 
-  static <T, E> Tuple2<T, E> mandatoryAnd(Optional<T> o1, Optional<E> o2) {
-    return and(o1, o2)
-        .orElseThrow(() -> new IllegalArgumentException("cannot be empty : " + o1 + ", " + o2));
+  static <T1, T2> AndCombiner2<T1, T2> and(Optional<T1> o1, Optional<T2> o2) {
+    return new AndCombiner2<>(o1, o2);
   }
 
-  static <T, E> Optional<Tuple2<T, E>> and(Optional<T> o1, Optional<E> o2) {
-    return join(o1, o2).combineBoth(Tuple::of);
+  static <T1, T2, T3> AndCombiner3<T1, T2, T3> and(Optional<T1> o1, Optional<T2> o2, Optional<T3> o3) {
+    return new AndCombiner3<>(o1, o2, o3);
+  }
+
+  static <T1, T2, T3, T4> AndCombiner4<T1, T2, T3, T4> and(Optional<T1> o1, Optional<T2> o2, Optional<T3> o3, Optional<T4> o4) {
+    return new AndCombiner4<>(o1, o2, o3, o4);
+  }
+
+  static <T1, T2, T3, T4, T5> AndCombiner5<T1, T2, T3, T4, T5> and(Optional<T1> o1, Optional<T2> o2, Optional<T3> o3, Optional<T4> o4, Optional<T5> o5) {
+    return new AndCombiner5<>(o1, o2, o3, o4, o5);
+  }
+
+  static <T1, T2, T3, T4, T5, T6> AndCombiner6<T1, T2, T3, T4, T5, T6> and(Optional<T1> o1, Optional<T2> o2, Optional<T3> o3, Optional<T4> o4, Optional<T5> o5, Optional<T6> o6) {
+    return new AndCombiner6<>(o1, o2, o3, o4, o5, o6);
+  }
+
+  static <T1, T2, T3, T4, T5, T6, T7> AndCombiner7<T1, T2, T3, T4, T5, T6, T7> and(Optional<T1> o1, Optional<T2> o2, Optional<T3> o3, Optional<T4> o4, Optional<T5> o5, Optional<T6> o6, Optional<T7> o7) {
+    return new AndCombiner7<>(o1, o2, o3, o4, o5, o6, o7);
+  }
+
+  static <T1, T2, T3, T4, T5, T6, T7, T8> AndCombiner8<T1, T2, T3, T4, T5, T6, T7, T8> and(Optional<T1> o1, Optional<T2> o2, Optional<T3> o3, Optional<T4> o4, Optional<T5> o5, Optional<T6> o6, Optional<T7> o7, Optional<T8> o8) {
+    return new AndCombiner8<>(o1, o2, o3, o4, o5, o6, o7, o8);
   }
 
   static <T, E> OptionalCombiner<T, E> join(Optional<T> o1, Optional<E> o2) {

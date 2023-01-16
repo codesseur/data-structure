@@ -1,6 +1,7 @@
 package com.codesseur;
 
 import com.codesseur.Optionals.SafeOptionalCombiner.UnmatchedCombination;
+import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +22,7 @@ public class OptionalsTest {
 
   @Test
   public void xorWithTwoValuedOptional() {
-    Optional<String> value = Optionals.xor( Optional.of("v1"), Optional.of("v2"));
+    Optional<String> value = Optionals.xor(Optional.of("v1"), Optional.of("v2"));
 
     Assertions.assertThat(value).isEmpty();
   }
@@ -35,7 +36,7 @@ public class OptionalsTest {
 
   @Test
   public void xorWithTwoSuppliedValuedOptional() {
-    Optional<String> value = Optionals.xor( () -> Optional.of("v1"), () -> Optional.of("v2"));
+    Optional<String> value = Optionals.xor(() -> Optional.of("v1"), () -> Optional.of("v2"));
 
     Assertions.assertThat(value).isEmpty();
   }
@@ -106,16 +107,9 @@ public class OptionalsTest {
 
   @Test
   public void andStreamWithBothPresent() {
-    Tuple2<String, String> value = Optionals.mandatoryAnd(Optional.of("v1"), Optional.of("v2"));
+    Optional<Tuple2<String, String>> value = Optionals.and(Optional.of("v1"), Optional.of("v2")).apply(Tuple::of);
 
-    Assertions.assertThat(value._1()).isEqualTo("v1");
-    Assertions.assertThat(value._2()).isEqualTo("v2");
-  }
-
-  @Test
-  public void andStreamWithFirstEmpty() {
-    Assertions.assertThatThrownBy(() -> Optionals.mandatoryAnd(Optional.empty(), Optional.of("v1")))
-        .isInstanceOf(IllegalArgumentException.class);
+    Assertions.assertThat(value).hasValue(Tuple.of("v1", "v2"));
   }
 
   @Test
