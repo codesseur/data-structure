@@ -139,12 +139,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
   }
 
   static <T> Streamed<T> of(Stream<? extends T> values) {
-    return Optional.ofNullable(values)
-        .<Streamed<T>>map(v -> {
-          Stream<T> ts = Stream.of(values).flatMap(identity());
-          return () -> ts;
-        })
-        .orElseGet(Streamed::empty);
+    return values == null ? Streamed.empty() : () -> (Stream<T>) values;
   }
 
   static <O, T> Streamed<T> paginate(O zero, Function<O, List<T>> nextPage, Function<T, O> offsetExtractor) {
@@ -174,7 +169,7 @@ public interface Streamed<T> extends Stream<T>, Iterable<T> {
 
   @Override
   default Streamed<T> filter(Predicate<? super T> predicate) {
-    return Streamed.of(stream().filter(predicate));
+    return of(stream().filter(predicate));
   }
 
   @Override

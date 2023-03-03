@@ -627,4 +627,17 @@ public class StreamedTest {
     Assertions.assertThat(values).isEmpty();
   }
 
+  @Test
+  void findFirstOnFlatMaps() {
+    List<String> iterations = new ArrayList<>();
+    Optional<String> value = Streamed.of("1", "2").flatMap(o ->
+    {
+      iterations.add(o);
+      return Optional.ofNullable(o).stream();
+    }).findFirst();
+
+    Assertions.assertThat(value).hasValue("1");
+    Assertions.assertThat(iterations).hasSize(1);
+  }
+
 }
